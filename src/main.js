@@ -686,6 +686,8 @@ function animate() {
   renderer.toneMappingExposure = 0.98 + insideLight * 0.08;
   hemi.intensity = 1.25 - insideLight * 0.7;
   scene.fog.density = 0.002 - insideLight * 0.0015;
+  world.flock.update(dt, camera.position, { reduced });
+  world.duck.update(dt, camera.position, { reduced });
   if (!reduced) {
     world.windMaterials.forEach((s) => (s.uniforms.uTime.value = time));
     world.water.position.y = -0.31 + Math.sin(time * 0.5) * 0.01;

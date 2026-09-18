@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { shoreline, farShore, isLand } from "./navigation.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { createForgedIron, forgedChain, forgedCuff } from "./ironwork.js";
+import { createFarmFlock, createHouseDuck } from "./farm-animals.js";
 
 let seed = 4128;
 export const random = () => {
@@ -1624,7 +1625,11 @@ export function createWorld(
   mergeStatic(house);
   mergeStatic(roof);
   mergeStatic(exhibits);
+  const flock = createFarmFlock(scene, colliders);
+  const duck = createHouseDuck(scene, colliders);
   return {
+    flock,
+    duck,
     displays,
     treePositions,
     waterNormal,

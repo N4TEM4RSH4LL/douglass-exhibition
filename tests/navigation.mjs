@@ -324,3 +324,5 @@ assert.ok(
 console.log(
   "PASS: III↔IV and IV↔V camera/near-plane sweeps clear actual rendered meshes; artifact exits never pan away; original entrance timing retained without flash.",
 );
+const { verifyAnimals } = await import("./animals.mjs");
+verifyAnimals(world, solids);
