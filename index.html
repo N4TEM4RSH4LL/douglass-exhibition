@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#161b18" />
+  <meta name="description" content="An immersive, explorable five-room museum environment inspired by Frederick Douglass's Maryland. Exhibition displays are intentionally blank." />
+  <title>The Douglass Exhibition — An Immersive Museum</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+<body>
+  <div id="world" aria-label="Interactive three-dimensional plantation museum"></div>
+  <div id="veil" aria-hidden="true"></div>
+  <div id="loading" role="status" aria-label="Preparing the museum"><span class="loader-ring"></span><span class="loader-line"></span></div>
+  <header id="topbar">
+    <button id="home" class="icon-button seal" aria-label="Return to the grounds" title="Grounds"></button>
+    <div class="tools">
+      <button id="sound" class="icon-button" aria-label="Enable ambient sound" title="Ambient sound" aria-pressed="false"></button>
+      <button id="quality" class="icon-button" aria-label="Switch to performance mode" title="Visual quality" aria-pressed="false"></button>
+      <button id="fullscreen" class="icon-button" aria-label="Enter fullscreen" title="Fullscreen"></button>
+    </div>
+  </header>
+  <aside id="plan" aria-label="Museum floor plan">
+    <svg viewBox="0 0 112 156" aria-hidden="true"><path d="M6 6H106V142H6Z M6 48H106 M6 96H44 M68 96H106 M44 48V142 M68 48V142"/><path class="porch" d="M38 142V151H74V142"/>
+      <rect data-room="1" x="10" y="101" width="29" height="35" rx="1"/>
+      <rect data-room="2" x="73" y="101" width="28" height="35" rx="1"/>
+      <rect data-room="3" x="73" y="53" width="28" height="37" rx="1"/>
+      <rect data-room="4" x="10" y="53" width="29" height="37" rx="1"/>
+      <rect data-room="5" x="10" y="10" width="91" height="32" rx="1"/>
+      <circle id="plan-position" cx="56" cy="148" r="2.6"/>
+    </svg>
+  </aside>
+  <div id="hotspots"></div>
+  <div id="reticle" aria-hidden="true"></div>
+  <div id="arrival" aria-hidden="true"><i></i><span></span><i></i></div>
+  <div id="entry"><button id="enter" aria-label="Enter the museum" title="Enter the museum"><span class="entry-icon"></span><span class="entry-arrow"></span></button><span class="entry-rule" aria-hidden="true"></span></div>
+  <nav id="navigation" aria-label="Exhibition rooms">
+    <button id="previous" class="icon-button" aria-label="Previous room" title="Previous room"></button>
+    <div id="room-buttons"></div>
+    <button id="next" class="icon-button" aria-label="Next room" title="Next room"></button>
+    <span class="nav-divider"></span>
+    <button id="tour" class="icon-button" aria-label="Start guided tour" title="Guided tour" aria-pressed="false"></button>
+  </nav>
+  <div id="modes"><button id="walk" class="icon-button" aria-label="Walk freely with W A S D or arrow keys. Drag to look. Escape to exit." title="Walk freely" aria-pressed="false"></button><button id="overview" class="icon-button" aria-label="Open architectural view" title="Architectural view" aria-pressed="false"></button></div>
+  <div id="walk-hint" aria-hidden="true"><kbd>W</kbd><div><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></div></div>
+  <div id="joystick" aria-label="Drag to move"><div></div></div>
+  <dialog id="artifact-panel" aria-label="Empty exhibition analysis display">
+    <button id="close-artifact" class="icon-button" aria-label="Close display" title="Close"></button>
+    <div class="blank-number" aria-hidden="true"></div>
+    <div class="blank-caption" aria-hidden="true"><i></i><i></i></div>
+    <div class="blank-quote" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div class="blank-analysis" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="blank-footer" aria-hidden="true"><span></span><span></span><span></span></div>
+  </dialog>
+  <div id="error" hidden><p>This browser could not start the 3D experience.</p><button onclick="location.reload()">Try again</button></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
