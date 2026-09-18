@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID, createHash } from "node:crypto";
 import { neon } from "@neondatabase/serverless";
+import http from "node:http";
 import handler from "../api/exhibition.js";
 import { CARDS, FIELD_BY_ID, progress } from "../src/exhibition-schema.js";
 const sql = neon(process.env.DATABASE_URL),
@@ -210,6 +211,81 @@ try {
   console.log(
     "PASS: two clients preserve conflicts, offline drafts survive reconstruction, retry after lost acknowledgement does not duplicate a save.",
   );
+  // A real streaming HTTP connection receives committed edits without a reload.
+  const server = http.createServer(handler);
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const abort = new AbortController(),
+    timeout = setTimeout(() => abort.abort(), 10000);
+  try {
+    const endpoint = `http://127.0.0.1:${server.address().port}/api/exhibition`;
+    const response = await fetch(endpoint + "?action=events", {
+      signal: abort.signal,
+    });
+    assert.equal(response.status, 200);
+    assert.ok(
+      response.headers.get("content-type").includes("text/event-stream"),
+    );
+    const reader = response.body.getReader(),
+      decoder = new TextDecoder();
+    let buffer = "";
+    async function snapshot() {
+      for (;;) {
+        const boundary = buffer.indexOf("\n\n");
+        if (boundary >= 0) {
+          const event = buffer.slice(0, boundary);
+          buffer = buffer.slice(boundary + 2);
+          const data = event
+            .split("\n")
+            .find((line) => line.startsWith("data: "));
+          if (data) return JSON.parse(data.slice(6));
+        } else {
+          const chunk = await reader.read();
+          assert.ok(!chunk.done, "Live connection must deliver an event");
+          buffer += decoder.decode(chunk.value, { stream: true });
+        }
+      }
+    }
+    const initial = await snapshot();
+    assert.ok(initial.fields);
+    const edit = await fetch(endpoint, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+      body: JSON.stringify(
+        patch("r1-control-4.title", "Live stream verification"),
+      ),
+    });
+    assert.equal(edit.status, 200);
+    let update;
+    do {
+      update = await snapshot();
+    } while (!update.fields["r1-control-4.title"]);
+    assert.equal(
+      update.fields["r1-control-4.title"].value,
+      "Live stream verification",
+    );
+    // Lower revisions arriving from a concurrent snapshot cannot roll back a newer save.
+    const ordered = client();
+    ordered.applySnapshot({
+      fields: { "r1-control-4.title": { value: "New", revision: 8 } },
+    });
+    ordered.applySnapshot({
+      fields: { "r1-control-4.title": { value: "Old", revision: 7 } },
+    });
+    assert.equal(ordered.values()["r1-control-4.title"], "New");
+    ordered.destroy();
+    await reader.cancel();
+    console.log(
+      "PASS: live HTTP event stream receives a committed save; older snapshots cannot overwrite newer revisions.",
+    );
+  } finally {
+    clearTimeout(timeout);
+    abort.abort();
+    server.closeAllConnections();
+    await new Promise((resolve) => server.close(resolve));
+  }
 } finally {
   await sql.transaction([
     sql`DELETE FROM exhibition_history WHERE exhibition_id=${namespace}`,

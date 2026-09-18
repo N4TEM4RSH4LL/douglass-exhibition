@@ -1,6 +1,11 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { neon } from "@neondatabase/serverless";
 import { FIELD_BY_ID } from "../src/exhibition-schema.js";
+import {
+  readSnapshot,
+  streamExhibition,
+  publishSave,
+} from "../server/live-exhibition.js";
 
 const originAllowed = (origin) =>
   !origin ||
@@ -67,7 +72,10 @@ export default async function handler(req, res) {
   }
   const url = new URL(req.url, "http://localhost"),
     action = url.searchParams.get("action");
-  if ((req.method === "PATCH" || action) && !authorized(req))
+  if (
+    (req.method === "PATCH" || (action && action !== "events")) &&
+    !authorized(req)
+  )
     return respond(401, {
       error: "Enter a valid class access key. Your local draft is retained.",
     });
@@ -80,6 +88,8 @@ export default async function handler(req, res) {
   const sql = neon(process.env.DATABASE_URL),
     exhibition = process.env.EXHIBITION_ID || "douglass-main";
   try {
+    if (req.method === "GET" && action === "events")
+      return await streamExhibition(res, sql, exhibition);
     if (req.method === "GET" && action === "history") {
       const field = url.searchParams.get("field");
       if (!FIELD_BY_ID[field])
@@ -96,16 +106,7 @@ export default async function handler(req, res) {
     }
     if (req.method === "GET") {
       if (action) return respond(400, { error: "Unknown action." });
-      const rows =
-        await sql`SELECT field_id,value,revision,updated_at AS "updatedAt",writer FROM exhibition_fields WHERE exhibition_id=${exhibition}`;
-      const fields = {};
-      let updatedAt = null;
-      for (const { field_id, ...row } of rows) {
-        if (!FIELD_BY_ID[field_id]) continue;
-        fields[field_id] = row;
-        if (!updatedAt || row.updatedAt > updatedAt) updatedAt = row.updatedAt;
-      }
-      return respond(200, { fields, updatedAt });
+      return respond(200, await readSnapshot(sql, exhibition));
     }
     let body;
     try {
@@ -146,6 +147,7 @@ export default async function handler(req, res) {
         error: "Another classmate changed this field. Review both versions.",
         current: row.result.current,
       });
+    publishSave(exhibition, field, row.result.field);
     return respond(200, { field: row.result.field });
   } catch (error) {
     console.error("Exhibition database request failed", {

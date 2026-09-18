@@ -98,7 +98,9 @@ function status() {
     text = `${pending.length} field${pending.length === 1 ? "" : "s"} waiting to save`;
     state = "saving";
   } else {
-    text = "All changes saved to the shared exhibition";
+    text = store.streamLive
+      ? "Live · all changes saved"
+      : "All changes saved to the shared exhibition";
   }
   if (!store.loaded && !pending.length) text = "Loading shared exhibition…";
   if (store.localError && pending.length) {
@@ -125,7 +127,7 @@ function fieldHTML(card, f) {
         : f.type === "text"
           ? `<input id="field-${id}" data-field="${id}" maxlength="${f.maxLength}" autocomplete="off">`
           : `<textarea id="field-${id}" data-field="${id}" maxlength="${f.maxLength}" rows="${f.targetWords ? 7 : f.key === "quote" ? 4 : 5}"></textarea>`;
-  return `<div class="field ${f.key === "quote" ? "quote" : ""}" data-field-wrap="${id}"><div class="field-label-row"><label for="field-${id}">${esc(f.label)}</label><span class="field-state"></span></div><p class="field-help" id="help-${id}">${esc(f.help)}</p>${input}<div class="field-tools"><span class="word-count" data-count="${id}"></span><button class="history-button" type="button" data-history="${id}">Version history</button></div><div class="field-conflict" hidden></div></div>`;
+  return `<div class="field ${f.key === "quote" ? "quote" : ""}" data-field-wrap="${id}"><div class="field-label-row"><label for="field-${id}">${esc(f.label)}${f.required ? "" : ' <span class="optional-field">(optional)</span>'}</label><span class="field-state"></span></div><p class="field-help" id="help-${id}">${esc(f.help)}</p>${input}<div class="field-tools"><span class="word-count" data-count="${id}"></span><button class="history-button" type="button" data-history="${id}">Version history</button></div><div class="field-conflict" hidden></div></div>`;
 }
 function renderEntry() {
   const card = CARD_BY_ID[selected],

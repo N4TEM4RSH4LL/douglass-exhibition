@@ -4,7 +4,6 @@ import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
 import {
   shoreline,
   isLand,
-  routeBetween,
   segmentClear,
   pointClear,
   moveWithCollisions,
@@ -14,6 +13,7 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { createWorld } from "./world.js";
+import { createCameraJourney, advanceCameraJourney } from "./camera-journey.js";
 import { connectExhibition } from "./exhibition-content.js";
 import { ROOMS } from "./exhibition-schema.js";
 
@@ -153,6 +153,7 @@ let lowQuality = touch,
   tourTime = 0,
   transition = null,
   time = 0,
+  idleTime = 0,
   drag = null,
   dragged = false,
   orbitYaw = 0,
@@ -179,66 +180,21 @@ function setCamera(pos, look) {
   camera.lookAt(look);
   target.copy(look);
 }
-let fadeTimer;
-function cutTo(view) {
-  transition = null;
-  orbitYaw = orbitPitch = 0;
-  clearTimeout(fadeTimer);
-  $("#camera-fade").classList.add("cover");
-  fadeTimer = setTimeout(
-    () => {
-      setCamera(vec(view.p), vec(view.t));
-      $("#camera-fade").classList.remove("cover");
-    },
-    reduced ? 0 : 230,
-  );
-}
 function fly(points, duration = 3.5, onDone = null) {
-  const start = { p: camera.position.clone(), t: target.clone() },
-    list = [start];
-  for (const v of points) {
-    const previous = list[list.length - 1],
-      end = { p: vec(v.p), t: vec(v.t) };
-    if (previous.p.y < 4.2 && end.p.y < 4.2) {
-      const path = routeBetween(
-        [previous.p.x, previous.p.z],
-        [end.p.x, end.p.z],
-        world.colliders,
-      );
-      if (!path) {
-        cutTo(points[points.length - 1]);
-        return;
-      }
-      for (let i = 0; i < path.length; i++) {
-        const [x, z] = path[i],
-          ratio = (i + 1) / path.length;
-        list.push({
-          p: new THREE.Vector3(
-            x,
-            THREE.MathUtils.lerp(previous.p.y, end.p.y, ratio),
-            z,
-          ),
-          t: previous.t.clone().lerp(end.t, ratio),
-        });
-      }
-    } else list.push(end);
-  }
-  const lengths = [];
-  let length = 0;
-  for (let i = 1; i < list.length; i++) {
-    length += Math.max(0.1, list[i].p.distanceTo(list[i - 1].p));
-    lengths.push(length);
-  }
-  transition = {
-    points: list,
-    lengths,
-    length,
-    duration: reduced ? 0.02 : duration,
-    elapsed: 0,
-    started: performance.now(),
-    onDone,
-  };
-  orbitYaw = orbitPitch = 0;
+  const journey = createCameraJourney(
+    camera.position,
+    camera.quaternion,
+    points,
+    world.colliders,
+    { duration, reduced },
+  );
+  if (!journey) return false;
+  transition = journey;
+  transition.onDone = onDone;
+  orbitYaw = orbitPitch = idleTime = 0;
+  $("#camera-fade").style.transition = "none";
+  $("#camera-fade").style.opacity = "0";
+  return true;
 }
 function stopTour() {
   touring = false;
@@ -273,55 +229,31 @@ function updateUI() {
   focus = null;
 }
 function navigate(next, { auto = false } = {}) {
+  const destination = Math.min(5, Math.max(0, next));
+  if (destination === room && !walking && !overview && !transition && !focus)
+    return;
   if (!auto) stopTour();
   if (document.pointerLockElement) document.exitPointerLock();
-  const wasOverview = overview;
+  const points = [];
+  // Every indoor route starts at the actual camera, even when a previous journey is interrupted.
+  if (destination === 0) {
+    if (camera.position.y < 4.2)
+      points.push({ p: [0, 2.15, 24], t: [0, 2, 35] });
+    points.push(views[0]);
+  } else {
+    if (camera.position.y >= 4.2)
+      points.push({ p: [0, 2.4, 24], t: [0, 2.2, 9] });
+    points.push(views[destination]);
+  }
+  if (!fly(points, destination === 0 || room === 0 ? 6 : 3.8)) return;
   walking = false;
   overview = false;
-  const before = room;
-  room = Math.min(5, Math.max(0, next));
-  updateUI();
-  history.replaceState(null, "", room ? `#room=${room}` : location.pathname);
-  if (wasOverview) {
-    world.roof.visible = true;
-    renderer.shadowMap.needsUpdate = true;
-    cutTo(views[room]);
-    return;
-  }
-  const points = [];
-  if (room === 0) {
-    world.roof.visible = true;
-    renderer.shadowMap.needsUpdate = true;
-    if (before > 0)
-      points.push({
-        p: [0, 2.13, before === 5 ? -12 : before < 3 ? 6.5 : -3.6],
-        t: [0, 2, 14],
-      });
-    points.push({ p: [0, 2.1, 18.8], t: [0, 2, 9] }, views[0]);
-    fly(points, 4.5);
-    return;
-  }
+  room = destination;
+  tourTime = 0;
   world.roof.visible = true;
   renderer.shadowMap.needsUpdate = true;
-  if (before === 0) {
-    points.push(
-      { p: [0, 2.4, 24], t: [0, 2.2, 9] },
-      { p: [0, 2.15, 12], t: [0, 2.2, 0] },
-    );
-  } else {
-    const hallwayZ = before === 5 ? -12 : before < 3 ? 6.5 : -3.6;
-    points.push({ p: [0, 2.13, hallwayZ], t: [0, 2, -8] });
-  }
-  if (room === 5) points.push({ p: [0, 2.13, -9], t: [0, 2, -17] });
-  else {
-    const hz = room < 3 ? 6.5 : -3.6;
-    points.push({
-      p: [0, 2.13, hz],
-      t: [room === 1 || room === 4 ? -7 : 7, 2, hz],
-    });
-  }
-  points.push(views[room]);
-  fly(points, before === 0 ? 6 : 3.2);
+  updateUI();
+  history.replaceState(null, "", room ? `#room=${room}` : location.pathname);
 }
 function openArtifact(h) {
   if (transition || walking || overview) return;
@@ -391,13 +323,30 @@ $("#tour").onclick = () => {
 };
 $("#overview").onclick = () => {
   stopTour();
+  if (document.pointerLockElement) document.exitPointerLock();
+  const next = !overview,
+    points = [];
+  if (next) {
+    if (camera.position.y < 4.2)
+      points.push({ p: [0, 2.15, 24], t: [0, 2, 35] });
+    points.push(views.overview);
+  } else {
+    if (room > 0 && camera.position.y >= 4.2)
+      points.push({ p: [0, 2.4, 24], t: [0, 2.2, 9] });
+    points.push(views[room]);
+  }
+  if (
+    !fly(points, 6, () => {
+      world.roof.visible = !overview;
+      renderer.shadowMap.needsUpdate = true;
+    })
+  )
+    return;
   walking = false;
-  overview = !overview;
-  world.roof.visible = !overview;
+  overview = next;
+  world.roof.visible = true;
   renderer.shadowMap.needsUpdate = true;
   updateUI();
-  if (document.pointerLockElement) document.exitPointerLock();
-  cutTo(overview ? views.overview : views[room]);
 };
 $("#fullscreen").onclick = async () => {
   try {
@@ -435,6 +384,7 @@ function walk() {
   renderer.shadowMap.needsUpdate = true;
   walking = !walking;
   transition = null;
+  $("#camera-fade").style.opacity = "0";
   if (walking) {
     if (room === 0) setCamera(vec([0, 2.1, 22]), vec([0, 2.1, 12]));
     else camera.position.y = 2.08;
@@ -638,25 +588,16 @@ function animate() {
   time += dt;
   frames++;
   if (transition) {
-    const tr = transition;
-    tr.elapsed = (performance.now() - tr.started) / 1000;
-    const total = Math.min(1, tr.elapsed / tr.duration);
-    const distance = total * tr.length;
-    const index = Math.min(
-      tr.points.length - 2,
-      tr.lengths.findIndex((length) => length >= distance),
-    );
-    const prior = index ? tr.lengths[index - 1] : 0;
-    let t = (distance - prior) / (tr.lengths[index] - prior);
-    t = t * t * (3 - 2 * t);
-    const a = tr.points[index],
-      b = tr.points[index + 1];
-    setCamera(
-      new THREE.Vector3().lerpVectors(a.p, b.p, t),
-      new THREE.Vector3().lerpVectors(a.t, b.t, t),
-    );
-    if (total === 1) {
+    const tr = advanceCameraJourney(transition, dt);
+    camera.position.copy(tr.position);
+    camera.quaternion.copy(tr.rotation);
+    target
+      .copy(camera.position)
+      .add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(4));
+    $("#camera-fade").style.opacity = String(tr.fade);
+    if (tr.done) {
       transition = null;
+      idleTime = 0;
       tr.onDone?.();
     }
   } else if (walking) {
@@ -715,6 +656,7 @@ function animate() {
       updateUI();
     }
   } else if (!focus) {
+    idleTime += dt;
     const v = overview ? views.overview : views[room];
     const base = vec(v.p),
       look = vec(v.t);
@@ -722,7 +664,9 @@ function animate() {
     const spherical = new THREE.Spherical().setFromVector3(offset);
     spherical.theta +=
       orbitYaw +
-      (!reduced && room === 0 && !overview ? Math.sin(time * 0.065) * 0.09 : 0);
+      (!reduced && room === 0 && !overview
+        ? Math.sin(idleTime * 0.065) * 0.09
+        : 0);
     spherical.phi = THREE.MathUtils.clamp(
       spherical.phi + orbitPitch,
       0.2,

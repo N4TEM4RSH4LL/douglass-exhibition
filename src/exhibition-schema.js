@@ -8,7 +8,7 @@ export const ROOMS = [
     title: "The man they tried to control",
     reading: "First half of Chapter 10",
     summary:
-      "Build a control map around Douglass, then explain how his confrontation with Covey changes his sense of agency.",
+      "Put Douglass at the centre of a Control Map. Show what controls him, explain the confrontation with Covey, and trace the change from CONTROL → RESISTANCE.",
     requirements: [
       "At least four forms of control, each supported by a Chapter 10 quotation and an explanation.",
       "An analysis of the confrontation with Covey as a turning point.",
@@ -21,9 +21,9 @@ export const ROOMS = [
     title: "The road to freedom",
     reading: "Second half of Chapter 10 and Chapter 11",
     summary:
-      "Follow five significant events. Distinguish changes in physical freedom from changes in identity, confidence and self-respect.",
+      "Create a visual journey through at least five important events. For every event, explain what happens, what changes for Douglass, and how he presents the change.",
     requirements: [
-      "Five events in a meaningful sequence.",
+      "At least five important events in Douglass’s journey towards freedom.",
       "For each event: what happens, what changes and how Douglass presents the change.",
       "Label each stage external (E), internal (I), or both.",
       "An evidence-based answer about internal freedom before physical freedom.",
@@ -36,12 +36,12 @@ export const ROOMS = [
     title: "Religion & hypocrisy",
     reading: "Chapters 9–10 and the Appendix",
     summary:
-      "Place religious claims opposite the conduct Douglass describes, and analyse how the contradiction exposes slavery.",
+      "Build a Contradiction Wall: WHAT RELIGION CLAIMS / WHAT SLAVEHOLDERS ACTUALLY DO. Use at least three examples, identify Douglass’s methods, and turn one example into a museum exhibit.",
     requirements: [
-      "Three paired examples of a religious claim and contradictory conduct.",
+      "At least three examples from Chapters 9–10 and the Appendix, pairing religious claims with slaveholders’ actions.",
       "Evidence and a named authorial method for each pair.",
       "A creative exhibit developed from one example.",
-      "Approximately 150 words of synthesis explaining the effect of religious hypocrisy.",
+      "Approximately 150 words answering: How does Douglass use religious hypocrisy to expose contradictions within slavery?",
     ],
   },
   {
@@ -86,7 +86,7 @@ const title = () =>
     "title",
     "Display title",
     "Give this display a short, specific title. It appears on its museum screen.",
-    { type: "text", maxLength: 100 },
+    { type: "text", maxLength: 100, required: false },
   );
 const quote = () =>
   f(
@@ -100,7 +100,7 @@ const source = () =>
     "source",
     "Chapter and source reference",
     "Record the chapter (or Appendix), plus your edition and page number if available. Page numbers differ between editions.",
-    { type: "text", maxLength: 240 },
+    { type: "text", maxLength: 240, required: false },
   );
 const method = () =>
   f(
@@ -112,7 +112,7 @@ const method = () =>
 const meaning = () =>
   f(
     "meaning",
-    "Why this object belongs here",
+    "Artifact explanation",
     "Explain what the displayed object symbolises, how it connects to Douglass’s experience, and how it supports this room’s argument. The models are symbolic; do not describe them as Douglass’s surviving possessions.",
     { maxLength: 2400 },
   );
@@ -123,8 +123,8 @@ function add(id, room, label, guide, fields, options = {}) {
 add(
   "r1-symbol",
   1,
-  "The centre of the control map",
-  "The chain display is the centre of the map. Establish who is being controlled and give the object an interpretive purpose.",
+  "Douglass at the centre · chain artifact",
+  "Put DOUGLASS at the centre of the Control Map, as the brief asks. The chain is a symbolic artifact beside that central identity; the four surrounding displays explain four forms of control.",
   [
     f(
       "title",
@@ -144,13 +144,13 @@ for (let i = 1; i <= 4; i++)
   add(
     `r1-control-${i}`,
     1,
-    `Control ${i}`,
-    "Each spoke should show a distinct form of control. Possible areas to investigate include fear, surveillance, exhaustion, punishment, religion, identity and lack of choice.",
+    `Form of control ${i}`,
+    "Choose one distinct form of control: Covey, fear, surveillance, punishment, exhaustion, religion, slavery, lack of choice or identity. Add a quotation from Chapter 10 and explain how this control affects Douglass. This is a Control Map panel; the chain in the centre is the artifact.",
     [
       f(
         "title",
         "Form of control",
-        "Name one specific form of control. Avoid repeating another spoke.",
+        "Name one specific form of control. Choose a different form for each of the four Control Map panels.",
         { type: "text", maxLength: 100 },
       ),
       quote(),
@@ -160,7 +160,7 @@ for (let i = 1; i <= 4; i++)
         "How it affects Douglass",
         "Explain how the evidence shows control over his actions, body, emotions, choices or identity. Analyse the quotation rather than merely restating it.",
       ),
-      method(),
+      { ...method(), required: false },
     ],
   );
 add(
@@ -213,8 +213,8 @@ for (let i = 1; i <= 5; i++)
   add(
     `r2-stage-${i}`,
     2,
-    `Journey stage ${i}`,
-    "Arrange the five cases in chronological order. Each stage needs an event, a change and an explanation of the narrative choices that make the change significant.",
+    `Journey event ${i}`,
+    "Use the second half of Chapter 10 and Chapter 11. Put the five events in order; answer the three questions below for each event, then label the freedom E, I or both. Explain how its artifact supports the event.",
     [
       title(),
       f(
@@ -227,7 +227,11 @@ for (let i = 1; i <= 5; i++)
         "What changes for Douglass?",
         "State the effect on his situation, independence, confidence, identity or self-respect.",
       ),
-      method(),
+      {
+        ...method(),
+        label: "How does Douglass present the change?",
+        help: "Explain how Douglass’s language or storytelling presents this change. Identify a precise choice, such as contrast, imagery, tone, structure or the details he includes.",
+      },
       f(
         "freedom",
         "Kind of freedom",
@@ -242,7 +246,7 @@ for (let i = 1; i <= 5; i++)
           maxLength: 3,
         },
       ),
-      quote(),
+      { ...quote(), required: false },
       source(),
       meaning(),
     ],
@@ -286,8 +290,8 @@ for (let i = 1; i <= 3; i++)
   add(
     `r3-pair-${i}`,
     3,
-    `Contradiction pair ${i}`,
-    "One shared entry supplies two facing screens: a religious claim on one side, and the contradictory conduct on the other.",
+    `Contradiction Wall · example ${i}`,
+    "Fill both sides of this example: WHAT RELIGION CLAIMS and WHAT SLAVEHOLDERS ACTUALLY DO. Use evidence from the text and label Douglass’s method: irony, contrast, juxtaposition, sarcasm, anecdote or direct commentary.",
     [
       title(),
       f(
@@ -313,8 +317,8 @@ for (let i = 1; i <= 3; i++)
 add(
   "r3-contradiction",
   3,
-  "Creative exhibit at the lectern",
-  "Develop one of the three examples into a purposeful museum feature. The open book and chain provide a symbolic starting point; your explanation gives them meaning.",
+  "Creative museum exhibit · book and chain",
+  "Choose one Contradiction Wall example and turn it into a museum exhibit: a quotation display, newspaper-style exhibit, illustrated artifact, audio-guide script or digital feature. Use the book and chain to support your explanation.",
   [
     title(),
     f(
@@ -358,7 +362,7 @@ add(
 add(
   "r3-analysis",
   3,
-  "Religion and hypocrisy — synthesis",
+  "Religious hypocrisy · 150-word explanation",
   "Write approximately 150 words answering how Douglass uses religious hypocrisy to expose contradictions within slavery.",
   [
     title(),
@@ -383,7 +387,7 @@ for (let i = 1; i <= 6; i++)
     `r4-stage-${i}`,
     4,
     stages[i - 1],
-    `This archive station represents Douglass as ${stages[i - 1].toLowerCase()}. Show the relationship between an experience, the way he narrates it, and his changing identity.`,
+    `This stage shows Douglass as ${stages[i - 1].toUpperCase()}. Include one important event, one quotation, one authorial choice and an explanation of how he changes. Connect this stage to the others and explain the symbolic artifact in its display case.`,
     [
       f(
         "title",
@@ -410,8 +414,8 @@ for (let i = 1; i <= 6; i++)
 add(
   "r4-representation",
   4,
-  "Control of the representation",
-  "Bring the archive to its conclusion by examining Douglass’s choices as an author.",
+  "Choosing what to reveal · controlling his story",
+  "Chapter 11: Douglass does not reveal every detail of his escape. Explain how controlling what he reveals can itself be a form of control. End by explaining the shift from others controlling his life to Douglass controlling its representation.",
   [
     title(),
     f(
@@ -431,7 +435,7 @@ add(
 add(
   "r5-authors-desk",
   5,
-  "The author’s desk",
+  "The author’s desk · writing artifacts",
   "Explain the significance of the pen, pages and book in the context of the whole exhibition.",
   [
     title(),
@@ -461,7 +465,7 @@ for (let i = 1; i <= 8; i++)
   add(
     `r5-quotation-${i}`,
     5,
-    `Evidence selection ${i}`,
+    `Significant quotation ${i}`,
     "Choose a significant quotation from across the Narrative. This wall is an evidence bank for the final argument, not a collection of decorative quotations.",
     [
       title(),
@@ -575,7 +579,7 @@ export function getDisplay(id, values) {
     card,
     binding,
     title:
-      (isStage
+      (isStage && v.title
         ? card.label + " · "
         : binding.field === "claim"
           ? "Claim · "

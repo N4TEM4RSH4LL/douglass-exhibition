@@ -56,26 +56,28 @@
         ></button>
       </div>
     </header>
-    <aside id="plan" aria-label="Museum floor plan">
-      <svg viewBox="0 0 112 156" aria-hidden="true">
-        <path
-          d="M6 6H106V142H6Z M6 48H106 M6 96H44 M68 96H106 M44 48V142 M68 48V142"
-        />
-        <path class="porch" d="M38 142V151H74V142" />
-        <rect data-room="1" x="10" y="101" width="29" height="35" rx="1" />
-        <rect data-room="2" x="73" y="101" width="28" height="35" rx="1" />
-        <rect data-room="3" x="73" y="53" width="28" height="37" rx="1" />
-        <rect data-room="4" x="10" y="53" width="29" height="37" rx="1" />
-        <rect data-room="5" x="10" y="10" width="91" height="32" rx="1" />
-        <circle id="plan-position" cx="56" cy="148" r="2.6" />
-      </svg>
-    </aside>
-    <div id="hotspots"></div>
-    <div id="exhibition-caption">
-      <span id="exhibition-sync" role="status"
-        >Connecting to class exhibition…</span
-      ><button id="read-room" hidden>Read this room ↗</button>
+    <div id="corner-navigation">
+      <aside id="plan" aria-label="Museum floor plan">
+        <svg viewBox="0 0 112 156" aria-hidden="true">
+          <path
+            d="M6 6H106V142H6Z M6 48H106 M6 96H44 M68 96H106 M44 48V142 M68 48V142"
+          />
+          <path class="porch" d="M38 142V151H74V142" />
+          <rect data-room="1" x="10" y="101" width="29" height="35" rx="1" />
+          <rect data-room="2" x="73" y="101" width="28" height="35" rx="1" />
+          <rect data-room="3" x="73" y="53" width="28" height="37" rx="1" />
+          <rect data-room="4" x="10" y="53" width="29" height="37" rx="1" />
+          <rect data-room="5" x="10" y="10" width="91" height="32" rx="1" />
+          <circle id="plan-position" cx="56" cy="148" r="2.6" />
+        </svg>
+      </aside>
+      <div id="exhibition-caption">
+        <span id="exhibition-sync" role="status"
+          >Connecting to class exhibition…</span
+        ><button id="read-room" hidden>Read this room ↗</button>
+      </div>
     </div>
+    <div id="hotspots"></div>
     <div id="reticle" aria-hidden="true"></div>
     <div id="arrival" aria-hidden="true"><i></i><span></span><i></i></div>
     <div id="entry">

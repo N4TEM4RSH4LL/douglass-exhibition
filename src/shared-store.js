@@ -16,6 +16,7 @@ export class SharedExhibition {
     this.error = "";
     this.localError = "";
     this.lastSaved = null;
+    this.streamLive = false;
     this.token = "";
     this.writer = "Class contributor";
     if (editor) {
@@ -93,12 +94,15 @@ export class SharedExhibition {
   }
   async connect() {
     await this.refresh();
+    this.startLive();
+    if (this.token) this.authenticate(this.token);
     this.timer = setInterval(() => {
-      if (!document.hidden) this.refresh();
-    }, 8000);
-    window.addEventListener("online", () =>
-      this.refresh().then(() => this.flush()),
-    );
+      if (!document.hidden && !this.streamLive) this.refresh();
+    }, 3000);
+    window.addEventListener("online", () => {
+      this.refresh();
+      this.startLive();
+    });
     window.addEventListener("beforeunload", (e) => {
       if (Object.keys(this.pending).length) {
         this.persist();
@@ -107,37 +111,71 @@ export class SharedExhibition {
       }
     });
     document.addEventListener("visibilitychange", () => {
-      if (document.hidden) this.persist();
-      else this.refresh();
+      if (document.hidden) {
+        this.persist();
+        this.stopLive();
+      } else {
+        this.refresh();
+        this.startLive();
+      }
     });
-    if (this.token) this.authenticate(this.token);
+  }
+  startLive() {
+    if (this.events || typeof EventSource === "undefined" || document.hidden)
+      return;
+    this.events = new EventSource(`${API_BASE}/api/exhibition?action=events`);
+    this.events.addEventListener("exhibition", (event) => {
+      try {
+        this.streamLive = true;
+        this.applySnapshot(JSON.parse(event.data));
+      } catch {
+        this.streamLive = false;
+        this.refresh();
+      }
+    });
+    this.events.addEventListener("unavailable", () => {
+      this.streamLive = false;
+      this.refresh();
+    });
+    this.events.onerror = () => {
+      this.streamLive = false;
+      this.notify();
+    };
+  }
+  stopLive() {
+    this.events?.close();
+    this.events = null;
+    this.streamLive = false;
+  }
+  applySnapshot(body) {
+    this.online = true;
+    this.loaded = true;
+    this.error = "";
+    if (body.updatedAt && (!this.lastSaved || body.updatedAt > this.lastSaved))
+      this.lastSaved = body.updatedAt;
+    for (const [id, row] of Object.entries(body.fields || {})) {
+      if (!FIELD_BY_ID[id]) continue;
+      const old = this.fields[id];
+      if (old && row.revision < old.revision) continue;
+      this.fields[id] = row;
+      const p = this.pending[id];
+      if (p && !this.inflight?.has(id)) {
+        if (p.value === row.value) delete this.pending[id];
+        else if (p.baseRevision !== row.revision) p.conflict = row;
+      }
+    }
+    this.persist();
+    this.notify();
+    if (this.editor) this.flush();
   }
   async refresh() {
+    if (this.refreshing) return;
+    this.refreshing = true;
     try {
       const { status, body } = await this.request();
       if (status !== 200)
         throw new Error(body.error || "Shared saving is unavailable.");
-      this.online = true;
-      this.loaded = true;
-      this.error = "";
-      this.lastSaved = body.updatedAt;
-      for (const [id, row] of Object.entries(body.fields || {})) {
-        if (!FIELD_BY_ID[id]) continue;
-        const old = this.fields[id];
-        if (!old || row.revision >= old.revision) this.fields[id] = row;
-        const p = this.pending[id];
-        if (p && !this.inflight?.has(id)) {
-          if (p.value === row.value) {
-            delete this.pending[id];
-          } else if (p.baseRevision !== row.revision) {
-            p.conflict = row;
-          }
-        }
-      }
-      // Missing server fields have revision zero; never clear a pending offline draft.
-      this.persist();
-      this.notify();
-      if (this.editor && this.token) this.flush();
+      this.applySnapshot(body);
     } catch (e) {
       this.online = false;
       this.error =
@@ -145,6 +183,8 @@ export class SharedExhibition {
           ? "The shared server is taking too long. Local drafts are retained."
           : e.message;
       this.notify();
+    } finally {
+      this.refreshing = false;
     }
   }
   async authenticate(key) {
@@ -199,10 +239,17 @@ export class SharedExhibition {
     this.persist();
     this.notify();
     clearTimeout(this.debounce);
-    this.debounce = setTimeout(() => this.flush(), 750);
+    this.debounce = setTimeout(() => this.flush(), 350);
   }
   async flush() {
-    if (this.saving || !this.token || !this.authorized || !this.online) return;
+    if (
+      this.saving ||
+      !this.online ||
+      !this.editor ||
+      !this.authorized ||
+      !this.token
+    )
+      return;
     const queue = Object.keys(this.pending).filter(
       (id) => !this.pending[id].conflict,
     );
@@ -266,7 +313,7 @@ export class SharedExhibition {
       this.authorized &&
       Object.values(this.pending).some((p) => !p.conflict)
     )
-      setTimeout(() => this.flush(), 500);
+      setTimeout(() => this.flush(), 150);
   }
   resolve(id, choice) {
     const p = this.pending[id];
@@ -305,6 +352,7 @@ export class SharedExhibition {
     };
   }
   destroy() {
+    this.stopLive();
     clearInterval(this.timer);
     clearTimeout(this.debounce);
   }

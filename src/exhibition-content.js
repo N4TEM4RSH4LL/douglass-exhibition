@@ -151,7 +151,9 @@ export function connectExhibition(world) {
       renderContent();
     const status = document.querySelector("#exhibition-sync");
     status.textContent = store.online
-      ? "Shared class exhibition"
+      ? store.streamLive
+        ? "Live class exhibition"
+        : "Shared class exhibition"
       : store.loaded
         ? "Offline · showing the last shared version"
         : "Connecting to class exhibition…";

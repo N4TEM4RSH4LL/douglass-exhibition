@@ -111,3 +111,94 @@ for (const a of viewpoints)
 console.log(
   `PASS: actual world has ${world.treePositions.length} trees on land, all ${CARDS.length} entries mapped, all 36 gallery routes clear of built collision geometry.`,
 );
+
+const { createCameraJourney, advanceCameraJourney, viewRotation } =
+  await import("../src/camera-journey.js");
+const galleryViews = [
+  { p: [-3.15, 2.3, 6.7], t: [-7, 1.85, 6.2] },
+  { p: [3.05, 2.5, 6.8], t: [7.3, 1.65, 6.4] },
+  { p: [3.15, 2.4, -3.6], t: [7.1, 2.03, -5.1] },
+  { p: [-3.15, 2.4, -3.6], t: [-7.1, 1.9, -5.5] },
+  { p: [0, 2.5, -12.2], t: [0, 2.1, -17.1] },
+];
+let transitions = 0,
+  interruptions = 0;
+function verifyJourney(journey) {
+  assert.ok(journey, "A continuous route must exist");
+  let steps = 0;
+  while (!journey.done && steps++ < 1800) {
+    const before = journey.position.clone(),
+      rotation = journey.rotation.clone();
+    advanceCameraJourney(journey, 1 / 60);
+    assert.ok(
+      journey.position.distanceTo(before) < 0.12,
+      "Camera position must not jump",
+    );
+    assert.ok(
+      rotation.angleTo(journey.rotation) <= 1.5 / 60 + 0.0011,
+      "Camera cannot snap its direction",
+    );
+    assert.ok(
+      pointClear(journey.position.x, journey.position.z, world.colliders),
+      "Rounded route must avoid furniture and walls",
+    );
+    assert.equal(
+      journey.fade,
+      0,
+      "Ordinary navigation must never use a flash or fade",
+    );
+  }
+  assert.ok(journey.done, "Camera must settle into its final view");
+  transitions++;
+}
+for (const a of galleryViews)
+  for (const b of galleryViews) {
+    const rotation = viewRotation(a.p, a.t),
+      journey = createCameraJourney(a.p, rotation, [b], world.colliders, {
+        duration: 3.8,
+      });
+    verifyJourney(journey);
+    assert.ok(journey.position.distanceTo(new THREE.Vector3(...b.p)) < 0.0001);
+    assert.ok(journey.rotation.angleTo(viewRotation(b.p, b.t)) < 0.0001);
+    // Interrupt midway and choose another room from the camera's current position.
+    const partial = createCameraJourney(a.p, rotation, [b], world.colliders, {
+      duration: 3.8,
+    });
+    for (let n = 0; n < 80; n++) advanceCameraJourney(partial, 1 / 60);
+    for (const c of galleryViews) {
+      const next = createCameraJourney(
+        partial.position,
+        partial.rotation,
+        [c],
+        world.colliders,
+        { duration: 3.8 },
+      );
+      assert.ok(next.position.equals(partial.position));
+      assert.ok(next.rotation.equals(partial.rotation));
+      verifyJourney(next);
+      interruptions++;
+    }
+  }
+const reduced = createCameraJourney(
+  galleryViews[0].p,
+  viewRotation(galleryViews[0].p, galleryViews[0].t),
+  [galleryViews[4]],
+  world.colliders,
+  { reduced: true },
+);
+let last = reduced.position.clone();
+for (let i = 0; i < 45; i++) {
+  advanceCameraJourney(reduced, 1 / 60);
+  if (!last.equals(reduced.position))
+    assert.equal(
+      reduced.fade,
+      1,
+      "Reduced-motion relocation must be fully covered",
+    );
+  last.copy(reduced.position);
+}
+assert.ok(reduced.done);
+assert.equal(reduced.fade, 0);
+console.log(
+  `PASS: ${transitions} continuous camera journeys including ${interruptions} mid-flight changes; bounded rotation, collision-free curves, exact endpoints, no normal-navigation fades.`,
+);

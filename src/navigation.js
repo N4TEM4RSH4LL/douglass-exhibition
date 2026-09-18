@@ -7,16 +7,33 @@ export function pointClear(x, z, colliders) {
   return !colliders.some((c) => x > c.x1 && x < c.x2 && z > c.z1 && z < c.z2);
 }
 export function segmentClear(a, b, colliders) {
-  const steps = Math.max(
-    1,
-    Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 0.12),
-  );
-  for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
-    if (
-      !pointClear(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, colliders)
-    )
-      return false;
+  // Intersect the entire segment with each open rectangle: sampling can miss a narrow corner.
+  for (const c of colliders) {
+    let enter = 0,
+      exit = 1,
+      miss = false;
+    for (const [axis, min, max] of [
+      [0, c.x1, c.x2],
+      [1, c.z1, c.z2],
+    ]) {
+      const delta = b[axis] - a[axis];
+      if (Math.abs(delta) < 1e-12) {
+        if (a[axis] <= min || a[axis] >= max) {
+          miss = true;
+          break;
+        }
+      } else {
+        const t1 = (min - a[axis]) / delta,
+          t2 = (max - a[axis]) / delta;
+        enter = Math.max(enter, Math.min(t1, t2));
+        exit = Math.min(exit, Math.max(t1, t2));
+        if (enter >= exit) {
+          miss = true;
+          break;
+        }
+      }
+    }
+    if (!miss && exit > 0 && enter < 1) return false;
   }
   return true;
 }
@@ -26,10 +43,10 @@ export function routeBetween(start, end, colliders) {
   if (!pointClear(...start, colliders) || !pointClear(...end, colliders))
     return null;
   const cell = 0.4,
-    minX = -13,
-    minZ = -22,
-    maxX = 13,
-    maxZ = 27;
+    minX = Math.min(-13, Math.floor(Math.min(start[0], end[0])) - 4),
+    minZ = Math.min(-22, Math.floor(Math.min(start[1], end[1])) - 4),
+    maxX = Math.max(13, Math.ceil(Math.max(start[0], end[0])) + 4),
+    maxZ = Math.max(27, Math.ceil(Math.max(start[1], end[1])) + 4);
   const width = Math.round((maxX - minX) / cell) + 1;
   const toGrid = (p) => [
     Math.round((p[0] - minX) / cell),
@@ -73,7 +90,7 @@ export function routeBetween(start, end, colliders) {
         path.push(position(...q));
         k = parent.get(k);
       }
-      path.push(start);
+      path.push(position(...from), start);
       path.reverse();
       const simplified = [path[0]];
       let i = 0;

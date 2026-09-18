@@ -12,7 +12,7 @@ An explorable 3D museum with five connected galleries, set inside an interpretiv
 - Guided tour, architectural cutaway, free walking, drag-to-look, touch joystick and fullscreen.
 - Opt-in synthesized ambient sound; no recorded voices or autoplay.
 - Physically based materials, a photographed cloud panorama, distant shoreline, moving water, sun and exhibit lighting, shadows, dust, foliage, fields, cabins, cart and jetty.
-- Ground camera routes avoid wall and case collision bounds; elevated views use a brief fade.
+- Continuous camera journeys follow rounded, collision-checked paths. Room changes can be interrupted without jumping; camera turns have a bounded speed. Reduced-motion preferences use a fully covered fade.
 - Reduced-motion support and a performance toggle. Public viewing; a class access key is required to share edits.
 
 ## Controls
@@ -23,11 +23,11 @@ The walking icon enables WASD / arrow-key movement. Move the mouse when pointer 
 
 ## Exhibition structure
 
-The user's supplied `Exhibition.docx` was read as a reference for spatial requirements. Its writing tasks were not executed. The original document is not included in this repository. The studio converts its requirements into guided fields without filling in the students’ responses.
+The user's supplied `Exhibition.docx` and updated `THE DOUGLASS EXHIBITION.pdf` were read as assignment references. The studio follows the brief's room names, questions, reading sections, minimum evidence counts and word targets. Its writing tasks were not executed. The source documents are not included in this repository. The studio converts their requirements into guided fields without filling in the students’ responses. Existing field IDs remain unchanged when labels are revised, so shared writing and version history are preserved. Optional titles, source details and supplementary analysis are marked in the editor.
 
 | Gallery | Spatial program                                                | Reserved content                                                                                   |
 | ------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| I       | Four spokes around a broken-chain vitrine                      | Four control analyses, a turning point panel, resistance connection                                |
+| I       | Four Control Map panels around the chain artifact              | Four control analyses, a turning point panel, resistance connection                                |
 | II      | Five vitrines joined by a brass route                          | Five events, internal freedom analysis, connection to resistance                                   |
 | III     | Opposing triptychs and a central lectern                       | Three pairs of contradictions, a creative exhibit and extended analysis                            |
 | IV      | Six linked archive stations                                    | Six identity stages, event / quotation / method / change interpretation, control of representation |
@@ -52,19 +52,19 @@ npm run build
 npm run preview
 ```
 
-`dist/` contains the static museum and `editor.html`. Relative asset paths support Vercel and the GitHub Pages subpath. Vercel additionally serves `api/exhibition.js`; GitHub Pages uses the canonical Vercel API with an explicit CORS allowlist. Both hosts read and write the same exhibition.
+`dist/` contains the static museum and `editor.html`. Relative asset paths support Vercel and the GitHub Pages subpath. Vercel additionally serves `api/exhibition.js` (including the public read-only event stream); GitHub Pages uses the canonical Vercel API with an explicit CORS allowlist. Both hosts read and write the same exhibition.
 
 For local shared editing, put server variables in `.env.local` (see `.env.example`), initialize the database once with `npm run db:setup`, then run `npm run dev:api` in a second terminal. Vite proxies `/api` to port 5174. Never expose `DATABASE_URL` or the class key through `VITE_` variables.
 
-`npm test` checks the actual world’s shoreline, assignment bindings and all 36 camera routes against its collision geometry. `npm run test:persistence` uses an isolated random database namespace to verify auth, validation, concurrent writes, revision history, lost acknowledgements, offline drafts and stale focused edits. It removes only that test namespace afterward.
+`npm test` checks the actual world’s shoreline, assignment bindings and all 36 camera routes against its collision geometry, plus 150 animated journeys including 125 interrupted room changes. `npm run test:persistence` uses an isolated random database namespace to verify auth, validation, concurrent writes, revision history, lost acknowledgements, offline drafts, stale focused edits and a real HTTP event stream. It removes only that test namespace afterward.
 
 ## Class workflow and saving
 
 1. Open `/editor.html` or choose **Exhibition studio** in the museum.
 2. Choose **Enter class key** and use the owner-supplied class key. An optional name or initials appears in version history; it is a display label, not an authenticated identity.
 3. Select a room and an entry. Each field explains exactly what belongs there, including exact quotations, references, authorial choices and artifact interpretations.
-4. Typing writes an immediate browser draft and queues a shared save. Wait for **All changes saved to the shared exhibition** before closing or presenting. A local-only draft is not yet visible to classmates.
-5. The museum checks for shared changes every eight seconds while visible. Physical screens show an excerpt; exhibit views show the complete submitted content. **Read Room** opens every entry without requiring precise 3D navigation.
+4. Typing writes an immediate browser draft and queues a shared save. Wait for **Live · all changes saved** (or **All changes saved to the shared exhibition** during fallback) before closing or presenting. A local-only draft is not yet visible to classmates.
+5. The studio and museum receive live server-sent updates while visible. Saves handled by the same server instance broadcast immediately after the database commits; changes from other instances are picked up by a one-second database check. The connection renews automatically and falls back to a three-second refresh during interruptions. Physical screens show an excerpt; exhibit views show the complete submitted content. **Read Room** opens every entry without requiring precise 3D navigation.
 6. Use **Version history** to restore previous saves, or **Download backup** to keep a portable JSON copy. **Restore from backup** previews the changed fields before queuing them. Downloaded backups contain writing, not the class access key.
 7. Check the **Presentation checklist**. Its completion counts check filled fields and word targets; students still need to verify quotation accuracy, analytical quality, chronological order and the overall argument.
 

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { shoreline, farShore, isLand } from "./navigation.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { createForgedIron, forgedChain, forgedCuff } from "./ironwork.js";
 
 let seed = 4128;
 export const random = () => {
@@ -952,16 +953,16 @@ export function createWorld(
       );
     }
   }
-  function chain(x, y, z, n = 8, scale = 1, parent = exhibits) {
-    for (let i = 0; i < n; i++) {
-      const link = new THREE.Mesh(
-        new THREE.TorusGeometry(0.115 * scale, 0.032 * scale, 7, 16),
-        iron,
-      );
-      link.position.set(x + i * 0.17 * scale, y + 0.012 * Math.sin(i), z);
-      link.rotation.x = PI / 2 + (i % 2 ? 0.35 : -0.35);
-      parent.add(link);
-    }
+  const forgedIron = createForgedIron();
+  const leather = new THREE.MeshStandardMaterial({
+    color: "#50372a",
+    roughness: 0.87,
+    bumpMap: forgedIron.bumpMap,
+    bumpScale: 0.0014,
+  });
+  const pageEdge = mat("#b9ac87", 0.96);
+  function chain(x, surface, z, count = 8, scale = 1, yaw = 0) {
+    exhibits.add(forgedChain(forgedIron, { x, surface, z, count, scale, yaw }));
   }
   function book(x, y, z, s = 1, open = false, parent = exhibits) {
     const g = new THREE.Group();
@@ -970,17 +971,45 @@ export function createWorld(
     parent.add(g);
     if (open) {
       for (const side of [-1, 1]) {
-        const p = box(0.59, 0.085, 0.76, side * 0.28, 0, 0, paper, g);
-        p.rotation.z = side * 0.12;
-        const c = box(0.61, 0.045, 0.79, side * 0.28, -0.07, 0, darkwood, g);
-        c.rotation.z = side * 0.12;
+        box(0.6, 0.028, 0.82, side * 0.305, 0.016, 0, leather, g);
+        // Separate curved leaves expose the page edges and a deep sewn gutter.
+        for (let leaf = 0; leaf < 9; leaf++) {
+          const geometry = new THREE.PlaneGeometry(0.58, 0.77, 20, 4);
+          const a = geometry.attributes.position;
+          for (let v = 0; v < a.count; v++) {
+            const t = (a.getX(v) + 0.29) / 0.58,
+              z = a.getY(v);
+            a.setXYZ(
+              v,
+              side * (0.018 + t * 0.58),
+              0.041 + leaf * 0.004 + 0.082 * Math.sin(t * PI * 0.9),
+              z,
+            );
+          }
+          if (side > 0) geometry.scale(1, 1, -1);
+          geometry.computeVertexNormals();
+          const page = new THREE.Mesh(geometry, leaf === 8 ? paper : pageEdge);
+          page.castShadow = page.receiveShadow = true;
+          g.add(page);
+        }
       }
-      box(0.06, 0.07, 0.8, 0, -0.018, 0, brass, g);
+      box(0.022, 0.018, 0.8, 0, 0.03, 0, leather, g);
+      for (const z of [-0.28, -0.1, 0.1, 0.28])
+        beam([-0.023, 0.058, z], [0.023, 0.058, z + 0.012], 0.003, pageEdge, g);
+      box(0.033, 0.004, 0.29, 0.2, 0.16, 0.3, mat("#763d31"), g);
     } else {
-      box(0.66, 0.11, 0.88, 0, 0.05, 0, paper, g);
-      box(0.71, 0.035, 0.92, 0, 0.125, 0, darkwood, g);
-      box(0.71, 0.035, 0.92, 0, -0.024, 0, darkwood, g);
-      box(0.04, 0.16, 0.92, -0.345, 0.05, 0, darkwood, g);
+      box(0.66, 0.11, 0.87, 0, 0.08, 0, paper, g);
+      for (let i = 1; i < 14; i++)
+        box(0.663, 0.0014, 0.873, 0, 0.029 + i * 0.0073, 0, pageEdge, g);
+      box(0.71, 0.028, 0.92, 0, 0.149, 0, leather, g);
+      box(0.71, 0.025, 0.92, 0, 0.014, 0, leather, g);
+      box(0.046, 0.146, 0.92, -0.341, 0.081, 0, leather, g);
+      for (const z of [-0.31, -0.16, 0.16, 0.31])
+        box(0.054, 0.152, 0.023, -0.341, 0.081, z, leather, g);
+      for (const x of [-0.283, 0.283])
+        box(0.003, 0.002, 0.78, x, 0.164, 0, brass, g);
+      for (const z of [-0.39, 0.39])
+        box(0.57, 0.002, 0.003, 0, 0.164, z, brass, g);
     }
     return g;
   }
@@ -989,35 +1018,62 @@ export function createWorld(
     g.position.set(x, y, z);
     g.scale.setScalar(s);
     exhibits.add(g);
-    cyl(0.24, 0.26, 0.09, 0, 0, 0, brass, g, 32);
-    cyl(0.205, 0.205, 0.013, 0, 0.05, 0, paper, g, 32);
-    for (let j = 0; j < 8; j++) {
-      const a = (j * PI) / 4;
+    cyl(0.24, 0.245, 0.085, 0, 0.044, 0, brass, g, 48);
+    cyl(0.216, 0.216, 0.012, 0, 0.089, 0, paper, g, 48);
+    for (let j = 0; j < 64; j++) {
+      const a = (j * PI * 2) / 64;
       beam(
-        [Math.sin(a) * 0.16, 0.065, Math.cos(a) * 0.16],
-        [Math.sin(a) * 0.19, 0.065, Math.cos(a) * 0.19],
-        0.007,
+        [
+          Math.sin(a) * (j % 8 ? 0.19 : 0.164),
+          0.098,
+          Math.cos(a) * (j % 8 ? 0.19 : 0.164),
+        ],
+        [Math.sin(a) * 0.205, 0.098, Math.cos(a) * 0.205],
+        j % 8 ? 0.0012 : 0.0026,
         iron,
         g,
       );
     }
-    const needle = new THREE.Mesh(new THREE.ConeGeometry(0.028, 0.3, 3), iron);
-    needle.position.y = 0.08;
-    needle.rotation.x = PI / 2;
-    g.add(needle);
+    for (const side of [-1, 1]) {
+      const needle = new THREE.Mesh(
+        new THREE.ConeGeometry(0.026, 0.155, 4),
+        side > 0 ? mat("#76372b", 0.6, 0.4) : iron,
+      );
+      needle.rotation.x = (side * PI) / 2;
+      needle.position.set(0, 0.114, side * 0.077);
+      needle.castShadow = true;
+      g.add(needle);
+    }
+    cyl(0.015, 0.018, 0.019, 0, 0.121, 0, brass, g);
+    const rim = new THREE.Mesh(
+      new THREE.TorusGeometry(0.228, 0.013, 10, 64),
+      brass,
+    );
+    rim.rotation.x = PI / 2;
+    rim.position.y = 0.124;
+    g.add(rim);
+    cyl(0.215, 0.215, 0.004, 0, 0.133, 0, glass, g, 48);
+    const loop = new THREE.Mesh(
+      new THREE.TorusGeometry(0.035, 0.009, 8, 24),
+      brass,
+    );
+    loop.rotation.x = PI / 2;
+    loop.position.set(0, 0.044, -0.273);
+    g.add(loop);
   }
   function quill(x, y, z, s = 1) {
     const g = new THREE.Group();
     g.position.set(x, y, z);
     g.scale.setScalar(s);
     exhibits.add(g);
-    beam([0, 0, 0], [0.42, 0.94, 0], 0.012, brass, g);
+    const shaft = mat("#cfc4a5", 0.9);
+    beam([0, 0, 0], [0.49, 1.4, 0.005], 0.008, shaft, g);
     const shape = new THREE.Shape();
     shape.moveTo(0.08, 0.18);
     shape.bezierCurveTo(-0.13, 0.72, 0.22, 1.26, 0.49, 1.4);
     shape.bezierCurveTo(0.65, 1.05, 0.62, 0.56, 0.08, 0.18);
     const f = new THREE.Mesh(
-      new THREE.ShapeGeometry(shape),
+      new THREE.ShapeGeometry(shape, 32),
       new THREE.MeshStandardMaterial({
         color: "#e5ddbe",
         side: THREE.DoubleSide,
@@ -1025,14 +1081,126 @@ export function createWorld(
       }),
     );
     g.add(f);
-    for (let j = 1; j < 9; j++)
-      beam(
-        [0.1 + j * 0.032, 0.23 + j * 0.1, 0.008],
-        [0.01 + j * 0.029, 0.4 + j * 0.09, 0.008],
-        0.004,
-        brass,
-        g,
+    for (let j = 1; j < 26; j++) {
+      const t = j / 27,
+        y = 0.2 + t * 1.13,
+        x = 0.07 + t * 0.39;
+      for (const side of [-1, 1])
+        beam(
+          [x, y, 0.006],
+          [x + side * Math.sin(t * PI) * 0.16, y - 0.06, 0.006],
+          0.0016,
+          shaft,
+          g,
+        );
+    }
+  }
+  function inkwell(x, surface, z, scale = 1) {
+    const profile = [
+      [0.02, 0],
+      [0.115, 0],
+      [0.135, 0.035],
+      [0.125, 0.14],
+      [0.07, 0.18],
+      [0.066, 0.23],
+      [0.043, 0.23],
+      [0.044, 0.17],
+    ].map(([r, y]) => new THREE.Vector2(r, y));
+    const ink = new THREE.Mesh(
+      new THREE.LatheGeometry(profile, 40),
+      forgedIron,
+    );
+    ink.position.set(x, surface, z);
+    ink.scale.setScalar(scale);
+    ink.castShadow = ink.receiveShadow = true;
+    exhibits.add(ink);
+    cyl(
+      0.042 * scale,
+      0.042 * scale,
+      0.003,
+      x,
+      surface + 0.177 * scale,
+      z,
+      mat("#101311", 0.2),
+      exhibits,
+      32,
+    );
+  }
+  function boat(x, surface, z) {
+    const g = new THREE.Group();
+    g.position.set(x, surface, z);
+    exhibits.add(g);
+    const ring = (height, width) =>
+      Array.from({ length: 49 }, (_, i) => {
+        const a = (i * PI) / 24;
+        return new THREE.Vector3(
+          Math.cos(a) * 0.38 * width,
+          height,
+          Math.sin(a) * 0.17 * width,
+        );
+      });
+    const levels = [
+      [0.035, 0.5],
+      [0.08, 0.72],
+      [0.15, 0.92],
+      [0.205, 1],
+      [0.205, 0.93],
+      [0.15, 0.84],
+      [0.08, 0.62],
+      [0.06, 0.4],
+    ].map(([h, w]) => ring(h, w));
+    const vertices = [],
+      uv = [];
+    for (let r = 0; r < levels.length - 1; r++)
+      for (let i = 0; i < 48; i++) {
+        for (const [row, col] of [
+          [r, i],
+          [r + 1, i],
+          [r, i + 1],
+          [r, i + 1],
+          [r + 1, i],
+          [r + 1, i + 1],
+        ]) {
+          vertices.push(...levels[row][col].toArray());
+          uv.push(col / 48, row / 7);
+        }
+      }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(vertices, 3),
+    );
+    geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+    geometry.computeVertexNormals();
+    const hull = new THREE.Mesh(geometry, wood);
+    hull.castShadow = hull.receiveShadow = true;
+    g.add(hull);
+    for (const [h, w] of [
+      [0.08, 0.723],
+      [0.15, 0.923],
+      [0.206, 0.97],
+    ]) {
+      const rail = new THREE.Mesh(
+        new THREE.TubeGeometry(
+          new THREE.CatmullRomCurve3(ring(h, w).slice(0, -1), true),
+          64,
+          h > 0.2 ? 0.01 : 0.002,
+          6,
+          true,
+        ),
+        darkwood,
       );
+      rail.castShadow = true;
+      g.add(rail);
+    }
+    for (const seat of [-0.19, 0, 0.19])
+      box(0.058, 0.023, seat === 0 ? 0.3 : 0.25, seat, 0.168, 0, darkwood, g);
+    box(0.36, 0.012, 0.11, 0, 0.066, 0, wood, g);
+    for (const support of [-0.21, 0.21])
+      box(0.07, 0.032, 0.12, support, 0.016, 0, black, g);
+    beam([-0.29, 0.228, -0.11], [0.25, 0.228, 0.14], 0.007, darkwood, g);
+    const paddle = box(0.105, 0.01, 0.031, 0.255, 0.228, 0.142, darkwood, g);
+    paddle.rotation.y = -0.43;
   }
   function bench(x, z, rot = 0) {
     const bw = Math.abs(Math.cos(rot)) * 1.25 + Math.abs(Math.sin(rot)) * 0.31,
@@ -1063,28 +1231,22 @@ export function createWorld(
     fill.position.set(x, 3, z);
     scene.add(fill);
   }
-  // I — central empty identity space, four control spokes and a broken chain.
+  // I — central identity artifact and four forms of control.
   const r1 = [-6.5, 7];
   box(8.3, 0.018, 9.8, -6.5, 0.43, 6.8, mat("#35362f"), exhibits);
   const top1 = plinth(-6.5, 6.4, 1.65, 1.08, 1.65);
   caseBox(-6.5, 6.4, 1.56, 0.78, 1.56, top1);
-  chain(-7.03, top1 + 0.08, 6.58, 5);
-  chain(-6.25, top1 + 0.08, 6.1, 3, 0.8);
-  const cuff = new THREE.Mesh(
-    new THREE.TorusGeometry(0.21, 0.048, 10, 27, PI * 1.7),
-    iron,
-  );
-  cuff.rotation.x = PI / 2;
-  cuff.position.set(-6.55, top1 + 0.15, 6.22);
-  exhibits.add(cuff);
+  chain(-7.03, top1, 6.58, 5);
+  chain(-6.4, top1, 6.05, 3, 0.8);
+  exhibits.add(forgedCuff(forgedIron, -6.9, top1, 6.12));
   hotspot("r1-symbol", 1, -6.5, 2.05, 6.4);
-  const spokeLocations = [
+  const controlLocations = [
     [-9.3, 8.7],
     [-9.3, 3.9],
     [-3.6, 8.7],
     [-3.6, 3.9],
   ];
-  spokeLocations.forEach(([x, z], i) => {
+  controlLocations.forEach(([x, z], i) => {
     line(
       [
         [-6.5, 0.462, 6.4],
@@ -1121,38 +1283,73 @@ export function createWorld(
     const h = plinth(x, z, 1.03, 0.85 + i * 0.08, 0.88);
     caseBox(x, z, 0.99, 0.56, 0.84, h);
     if (i === 0) {
-      book(x, h + 0.06, z, 0.64);
+      book(x, h, z, 0.64);
     } else if (i === 1) {
-      compass(x, h + 0.12, z, 0.85);
+      compass(x, h, z, 0.85);
     } else if (i === 2) {
-      box(0.62, 0.025, 0.43, x, h + 0.04, z, paper, exhibits);
-      box(0.48, 0.022, 0.34, x + 0.09, h + 0.07, z - 0.02, paper, exhibits);
-    } else if (i === 3) {
-      const boat = new THREE.Mesh(
-        new THREE.SphereGeometry(0.4, 12, 6, 0, PI * 2, 0, PI / 2),
-        wood,
-      );
-      boat.rotation.x = PI;
-      boat.scale.set(1, 0.45, 0.48);
-      boat.position.set(x, h + 0.19, z);
-      exhibits.add(boat);
-      beam([x, h + 0.18, z], [x, h + 0.56, z], 0.012, brass, exhibits);
-    } else {
-      const key = new THREE.Mesh(
-        new THREE.TorusGeometry(0.09, 0.022, 8, 16),
-        brass,
-      );
-      key.rotation.x = PI / 2;
-      key.position.set(x - 0.12, h + 0.1, z);
-      exhibits.add(key);
-      beam(
-        [x - 0.03, h + 0.1, z],
-        [x + 0.25, h + 0.1, z],
-        0.025,
-        brass,
+      for (let leaf = 0; leaf < 7; leaf++) {
+        const sheet = box(
+          0.6,
+          0.002,
+          0.43,
+          x + Math.sin(leaf) * 0.007,
+          h + 0.002 + leaf * 0.003,
+          z,
+          paper,
+          exhibits,
+        );
+        sheet.rotation.y = leaf * 0.009;
+      }
+      const ribbon = box(
+        0.028,
+        0.003,
+        0.44,
+        x + 0.12,
+        h + 0.024,
+        z,
+        mat("#764936"),
         exhibits,
       );
-      box(0.055, 0.025, 0.13, x + 0.22, h + 0.1, z + 0.04, brass, exhibits);
+      const seal = cyl(
+        0.034,
+        0.032,
+        0.011,
+        x + 0.12,
+        h + 0.03,
+        z + 0.06,
+        mat("#713f31"),
+        exhibits,
+        24,
+      );
+    } else if (i === 3) {
+      boat(x, h, z);
+    } else {
+      const key = new THREE.Mesh(
+        new THREE.TorusGeometry(0.09, 0.019, 12, 48),
+        forgedIron,
+      );
+      key.rotation.x = PI / 2;
+      key.position.set(x - 0.12, h + 0.025, z);
+      key.castShadow = key.receiveShadow = true;
+      exhibits.add(key);
+      beam(
+        [x - 0.03, h + 0.025, z],
+        [x + 0.25, h + 0.025, z],
+        0.025,
+        forgedIron,
+        exhibits,
+      );
+      for (const tooth of [0.15, 0.22])
+        box(
+          0.027,
+          0.034,
+          0.074,
+          x + tooth,
+          h + 0.025,
+          z + 0.047,
+          forgedIron,
+          exhibits,
+        );
     }
     const label = panel(
       x,
@@ -1194,8 +1391,8 @@ export function createWorld(
     );
   }
   const rt = plinth(6.5, -5.3, 2.2, 1.06, 1.25);
-  book(6.08, rt + 0.16, -5.25, 0.8, true);
-  chain(6.5, rt + 0.1, -5.2, 7, 0.8);
+  book(6.08, rt, -5.25, 0.8, true);
+  chain(7.12, rt, -5.72, 6, 0.75, -PI / 2);
   hotspot("r3-contradiction", 3, 6.5, 2.18, -5.3);
   panel(6.6, 2.5, -10.78, 3.6, 1.5, 0, 3, "r3-analysis");
   roomLight(6.5, -5.2, "#efce92");
@@ -1222,23 +1419,48 @@ export function createWorld(
     );
     if (i === 0) {
       box(0.4, 0.32, 0.4, x, h + 0.16, z, wood, exhibits);
+      for (const side of [-1, 1]) {
+        box(0.43, 0.04, 0.44, x, h + 0.04, z, darkwood, exhibits);
+        box(0.43, 0.04, 0.44, x, h + 0.3, z, darkwood, exhibits);
+        for (const zz of [-0.15, 0.15])
+          sphere(
+            0.009,
+            x + side * 0.205,
+            h + 0.16,
+            z + zz,
+            forgedIron,
+            exhibits,
+            2,
+          );
+      }
     } else if (i === 1) {
       const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(0.19, 0.03, 8, 24),
+        new THREE.TorusGeometry(0.19, 0.021, 12, 48),
         brass,
       );
-      ring.position.set(x, h + 0.26, z);
+      ring.scale.y = 1.18;
+      ring.position.set(x, h + 0.33, z);
+      ring.castShadow = true;
       exhibits.add(ring);
+      box(0.25, 0.035, 0.17, x, h + 0.018, z, darkwood, exhibits);
+      cyl(0.011, 0.025, 0.11, x, h + 0.08, z, brass, exhibits);
+      const mirror = new THREE.Mesh(
+        new THREE.CircleGeometry(0.178, 48),
+        mat("#78857b", 0.2, 0.94),
+      );
+      mirror.scale.y = 1.18;
+      mirror.position.set(x, h + 0.33, z - 0.006);
+      exhibits.add(mirror);
     } else if (i === 2) {
-      book(x, h + 0.08, z, 0.65, true);
+      book(x, h, z, 0.65, true);
     } else if (i === 3) {
-      chain(x - 0.38, h + 0.13, z, 3);
-      chain(x + 0.21, h + 0.13, z - 0.14, 2);
+      chain(x - 0.42, h, z + 0.15, 3);
+      chain(x + 0.13, h, z - 0.18, 2);
     } else if (i === 4) {
-      compass(x, h + 0.09, z, 0.8);
+      compass(x, h, z, 0.8);
     } else {
-      cyl(0.09, 0.12, 0.18, x, h + 0.09, z, iron, exhibits);
-      quill(x, h + 0.17, z, 0.43);
+      inkwell(x, h, z, 0.72);
+      quill(x, h + 0.13, z, 0.36);
     }
     hotspot(`r4-artifact-${i + 1}`, 4, x, h + 0.77, z);
   }
@@ -1265,12 +1487,12 @@ export function createWorld(
     }
   box(3.1, 0.34, 0.52, 0, 1.37, -15.86, darkwood, exhibits);
   for (const x of [-0.8, 0.8]) sphere(0.045, x, 1.37, -15.57, brass, exhibits);
-  book(-0.45, 1.77, -16.3, 1.22, true);
-  book(1.2, 1.78, -16.6, 0.6);
-  book(1.21, 1.94, -16.58, 0.6);
-  cyl(0.12, 0.16, 0.23, 0.65, 1.83, -16.2, iron, exhibits);
-  quill(0.65, 1.95, -16.2, 0.7);
-  box(0.65, 0.018, 0.84, 0.25, 1.7, -15.98, paper, exhibits);
+  book(-0.5, 1.685, -16.42, 1.05, true);
+  book(1.2, 1.685, -16.6, 0.6);
+  book(1.21, 1.783, -16.58, 0.6);
+  inkwell(0.65, 1.685, -16.2);
+  quill(0.65, 1.86, -16.2, 0.7);
+  box(0.32, 0.008, 0.34, 0.4, 1.687, -15.86, paper, exhibits);
   hotspot("r5-authors-desk", 5, 0, 2.3, -16.35);
   const chair = new THREE.Group();
   chair.position.set(0, 0.45, -17.65);
