@@ -1,16 +1,19 @@
 # The Douglass Exhibition
 
-An explorable 3D museum with five connected galleries, set inside an interpretive Maryland plantation landscape. Built in HTML, CSS and JavaScript with Three.js and Vite. Exhibition writing is intentionally absent: all interpretation, quotation and analysis surfaces remain blank.
+An explorable 3D museum with five connected galleries, set inside an interpretive Maryland plantation landscape. Built in HTML, CSS and JavaScript with Three.js and Vite. Classmates contribute through a shared exhibition studio. Their writing appears on the 3D screens and in readable exhibit views; no completed student answers are supplied.
 
 ## Experience
 
 - Cinematic arrival across the grounds and through the front entrance.
 - Five numbered galleries connected by a central hall.
-- Clickable symbolic objects and blank interpretation panels.
+- Clickable symbolic objects, live text panels and a room-by-room reading view.
+- Assignment-specific editor with 37 entries, quotation references, word targets and a presentation checklist.
+- Shared Postgres storage, individual field autosaves, conflict review, version history and JSON backups.
 - Guided tour, architectural cutaway, free walking, drag-to-look, touch joystick and fullscreen.
 - Opt-in synthesized ambient sound; no recorded voices or autoplay.
-- Physically based materials, sun and exhibit lighting, shadows, dust, animated foliage, fields, cabins, cart, jetty and water.
-- Reduced-motion support and a performance toggle. No accounts, tracking, backend or credentials required.
+- Physically based materials, a photographed cloud panorama, distant shoreline, moving water, sun and exhibit lighting, shadows, dust, foliage, fields, cabins, cart and jetty.
+- Ground camera routes avoid wall and case collision bounds; elevated views use a brief fade.
+- Reduced-motion support and a performance toggle. Public viewing; a class access key is required to share edits.
 
 ## Controls
 
@@ -20,17 +23,17 @@ The walking icon enables WASD / arrow-key movement. Move the mouse when pointer 
 
 ## Exhibition structure
 
-The user's supplied `Exhibition.docx` was read as a reference for spatial requirements. Its writing tasks were not executed. The original document is not included in this repository.
+The user's supplied `Exhibition.docx` was read as a reference for spatial requirements. Its writing tasks were not executed. The original document is not included in this repository. The studio converts its requirements into guided fields without filling in the students’ responses.
 
-| Gallery | Spatial program | Reserved content |
-| --- | --- | --- |
-| I | Four spokes around a broken-chain vitrine | Four control analyses, a turning point panel, resistance connection |
-| II | Five vitrines joined by a brass route | Five events, internal freedom analysis, connection to resistance |
-| III | Opposing triptychs and a central lectern | Three pairs of contradictions, a creative exhibit and extended analysis |
-| IV | Six linked archive stations | Six identity stages, event / quotation / method / change interpretation, control of representation |
-| V | Writing desk, suspended blank pages and eight quotation panels | Eight quotations, curator statement and synthesis |
+| Gallery | Spatial program                                                | Reserved content                                                                                   |
+| ------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| I       | Four spokes around a broken-chain vitrine                      | Four control analyses, a turning point panel, resistance connection                                |
+| II      | Five vitrines joined by a brass route                          | Five events, internal freedom analysis, connection to resistance                                   |
+| III     | Opposing triptychs and a central lectern                       | Three pairs of contradictions, a creative exhibit and extended analysis                            |
+| IV      | Six linked archive stations                                    | Six identity stages, event / quotation / method / change interpretation, control of representation |
+| V       | Writing desk, suspended blank pages and eight quotation panels | Eight quotations, curator statement and synthesis                                                  |
 
-Each interactive location has a stable slot ID, such as `r2-stage-3` or `r5-curator-statement`. Slots and geometry live in `src/world.js`; interactions live in `src/main.js`. Displaying a slot opens a deliberately blank analysis composition. No quotations, historical arguments or student answers are embedded in the visitor experience.
+Each interactive location has a stable slot ID, such as `r2-stage-3` or `r5-curator-statement`. Geometry lives in `src/world.js`; the shared content model and guidance live in `src/exhibition-schema.js`. `src/exhibition-content.js` draws saved content onto the screens and renders the full entry. No quotations, historical arguments or completed student answers are prefilled.
 
 ## Historical scope
 
@@ -49,7 +52,27 @@ npm run build
 npm run preview
 ```
 
-`dist/` is a static website. Relative asset paths support Vercel, GitHub Pages subpaths and other static hosts. The source HTML must be served through Vite during development; the built output can be served by any HTTP server.
+`dist/` contains the static museum and `editor.html`. Relative asset paths support Vercel and the GitHub Pages subpath. Vercel additionally serves `api/exhibition.js`; GitHub Pages uses the canonical Vercel API with an explicit CORS allowlist. Both hosts read and write the same exhibition.
+
+For local shared editing, put server variables in `.env.local` (see `.env.example`), initialize the database once with `npm run db:setup`, then run `npm run dev:api` in a second terminal. Vite proxies `/api` to port 5174. Never expose `DATABASE_URL` or the class key through `VITE_` variables.
+
+`npm test` checks the actual world’s shoreline, assignment bindings and all 36 camera routes against its collision geometry. `npm run test:persistence` uses an isolated random database namespace to verify auth, validation, concurrent writes, revision history, lost acknowledgements, offline drafts and stale focused edits. It removes only that test namespace afterward.
+
+## Class workflow and saving
+
+1. Open `/editor.html` or choose **Exhibition studio** in the museum.
+2. Choose **Enter class key** and use the owner-supplied class key. An optional name or initials appears in version history; it is a display label, not an authenticated identity.
+3. Select a room and an entry. Each field explains exactly what belongs there, including exact quotations, references, authorial choices and artifact interpretations.
+4. Typing writes an immediate browser draft and queues a shared save. Wait for **All changes saved to the shared exhibition** before closing or presenting. A local-only draft is not yet visible to classmates.
+5. The museum checks for shared changes every eight seconds while visible. Physical screens show an excerpt; exhibit views show the complete submitted content. **Read Room** opens every entry without requiring precise 3D navigation.
+6. Use **Version history** to restore previous saves, or **Download backup** to keep a portable JSON copy. **Restore from backup** previews the changed fields before queuing them. Downloaded backups contain writing, not the class access key.
+7. Check the **Presentation checklist**. Its completion counts check filled fields and word targets; students still need to verify quotation accuracy, analytical quality, chronological order and the overall argument.
+
+Each field has a database revision. Saving uses an atomic compare-and-swap operation and appends history in the same transaction. Different fields can save concurrently. Competing edits to the same field retain the local draft and shared version until the contributor chooses. Save identifiers make retries safe after a lost response. History is retained in the database and browsed in pages of 100 versions.
+
+The class key is a shared editing capability. It is stored only for the browser session, sent as an authorization header, and checked against a server-only SHA-256 hash (`EDITOR_SECRET_HASH`). Class invitation fragments are removed from the address bar after reading. Anyone given the key can edit the exhibition; keep it within the class. Neither the key nor database credentials belong in this repository. Rotate a compromised key by replacing the server hash and sharing the new key.
+
+The default database namespace is `douglass-main`; `EXHIBITION_ID` is server-controlled. Database/service availability and browser storage remain practical limits: errors retain drafts where browser storage is available and show that shared saving has not succeeded. Keep occasional downloaded backups. No deletion or reset endpoint is exposed.
 
 ## Asset acknowledgments
 
@@ -60,5 +83,6 @@ All modeled geometry and procedural textures / ambient sound were created for th
 - [Brown Mud Dry](https://polyhaven.com/a/brown_mud_dry)
 - [Grey Roof Tiles](https://polyhaven.com/a/grey_roof_tiles)
 - [Plastered Wall](https://polyhaven.com/a/plastered_wall)
+- [Kloofendal 38° Partly Cloudy Pure Sky](https://polyhaven.com/a/kloofendal_38d_partly_cloudy_puresky)
 
-Three.js is distributed under the MIT license. Cormorant Garamond, loaded through Google Fonts for the Roman numerals, uses the SIL Open Font License. Georgia is the local fallback.
+Three.js is distributed under the MIT license. Cormorant Garamond and DM Sans, loaded through Google Fonts, use the SIL Open Font License. Georgia is the local fallback.

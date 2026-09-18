@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#19352d" />
+    <link rel="icon" href="/favicon.svg" />
+    <title>Exhibition Studio · The Douglass Exhibition</title>
+  </head>
+  <body>
+    <header class="studio-header">
+      <a class="studio-brand" href="./"
+        >D<span
+          >THE DOUGLASS EXHIBITION<small>Class exhibition studio</small></span
+        ></a
+      >
+      <div class="header-actions">
+        <span id="save-status" role="status" aria-live="polite"
+          >Connecting to shared exhibition…</span
+        ><a class="button museum-link" href="./" target="_blank" rel="noopener"
+          >Open museum ↗</a
+        >
+      </div>
+    </header>
+    <div class="studio-shell">
+      <aside class="sidebar">
+        <button id="overview-button" class="overview-button">
+          Presentation checklist <span id="overall-count"></span>
+        </button>
+        <nav id="room-tabs" aria-label="Exhibition rooms"></nav>
+        <nav id="card-links" aria-label="Entries in this room"></nav>
+        <div class="sidebar-bottom">
+          <button id="download">Download backup</button
+          ><button id="import-button">Restore from backup</button
+          ><input
+            type="file"
+            id="import-file"
+            accept="application/json,.json"
+            hidden
+          /><button id="access-button">Class access</button>
+        </div>
+      </aside>
+      <main id="main">
+        <section id="access-notice" class="notice" hidden>
+          <div>
+            <strong>Unlock shared editing</strong>
+            <p>
+              Use the class access key to save work to the museum for everyone.
+              Any draft you type before unlocking stays on this device.
+            </p>
+          </div>
+          <button class="button primary" id="unlock">Enter class key</button>
+        </section>
+        <div
+          id="connection-notice"
+          class="notice warning"
+          hidden
+          role="status"
+        ></div>
+        <section id="content"></section>
+        <footer class="studio-footer">
+          Use your own edition to verify every quotation and reference.
+          Completion checks track the required content; they do not grade your
+          interpretation.
+        </footer>
+      </main>
+    </div>
+    <dialog id="access-dialog">
+      <form id="access-form">
+        <button
+          type="button"
+          class="dialog-close"
+          aria-label="Close class access"
+        >
+          ×</button
+        ><span class="eyebrow">SHARED CLASS EXHIBITION</span>
+        <h2>Class access</h2>
+        <p>
+          The museum is public to view. The class key lets your classmates
+          contribute to the same exhibition.
+        </p>
+        <label for="class-key">Class access key</label
+        ><input
+          id="class-key"
+          type="password"
+          autocomplete="off"
+          spellcheck="false"
+          required
+        /><label for="writer"
+          >Your display name or initials <span>(optional)</span></label
+        ><input
+          id="writer"
+          maxlength="60"
+          autocomplete="nickname"
+          placeholder="Class contributor"
+        />
+        <p id="access-error" role="alert"></p>
+        <div class="dialog-actions">
+          <button class="button primary" type="submit">
+            Unlock shared editing</button
+          ><button id="copy-invite" class="button" type="button" hidden>
+            Copy class editor link</button
+          ><button id="lock-editor" class="button" type="button" hidden>
+            Lock on this device
+          </button>
+        </div>
+        <p class="fine-print">
+          Share the editor link only with your class. Shared saves become
+          visible in the museum automatically.
+        </p>
+      </form>
+    </dialog>
+    <dialog id="history-dialog">
+      <button class="dialog-close" aria-label="Close version history">×</button
+      ><span class="eyebrow">RECOVER PREVIOUS WORK</span>
+      <h2 id="history-title">Version history</h2>
+      <p>
+        Restoring a version creates a new save. Earlier versions remain
+        available.
+      </p>
+      <div id="history-content"></div>
+    </dialog>
+    <dialog id="import-dialog">
+      <button class="dialog-close" aria-label="Close backup review">×</button
+      ><span class="eyebrow">BACKUP REVIEW</span>
+      <h2>Restore a saved backup</h2>
+      <p id="import-summary"></p>
+      <p>
+        This will queue the reviewed fields for shared saving. Existing shared
+        work is preserved in version history. Conflicting edits will need your
+        review.
+      </p>
+      <div id="import-list"></div>
+      <button id="confirm-import" class="button primary">
+        Restore these fields
+      </button>
+    </dialog>
+    <script type="module" src="/src/editor.js"></script>
+  </body>
+</html>
