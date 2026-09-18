@@ -13,7 +13,7 @@ function clear(a, b, colliders) {
     a.y >= 4.2 || b.y >= 4.2 || segmentClear([a.x, a.z], [b.x, b.z], colliders)
   );
 }
-function roundCorners(points, colliders) {
+function roundCorners(points, colliders, anchors) {
   if (points.length < 3) return points;
   const out = [points[0]];
   for (let i = 1; i < points.length - 1; i++) {
@@ -49,6 +49,8 @@ function roundCorners(points, colliders) {
       }
     }
     out.push(...(curve || [b]));
+    const anchor = anchors.find((a) => a.point === b);
+    if (anchor) anchor.point = out[curve ? out.length - 9 : out.length - 1];
   }
   out.push(points.at(-1));
   return out;
@@ -61,6 +63,7 @@ export function createCameraJourney(
   { duration = 3.5, reduced = false } = {},
 ) {
   const points = [asVector(position)];
+  const anchors = [{ point: points[0], rotation: rotation.clone() }];
   for (const view of views) {
     const start = points.at(-1),
       end = asVector(view.p);
@@ -88,14 +91,23 @@ export function createCameraJourney(
         if (p.distanceTo(points.at(-1)) > 0.001) points.push(p);
       });
     } else points.push(end);
+    anchors.push({
+      point: points.at(-1),
+      rotation: viewRotation(view.p, view.t),
+    });
   }
-  const path = roundCorners(points, colliders),
+  const path = roundCorners(points, colliders, anchors),
     lengths = [0];
   for (let i = 1; i < path.length; i++)
     lengths.push(lengths.at(-1) + path[i].distanceTo(path[i - 1]));
   const length = lengths.at(-1),
     last = views.at(-1),
     endQ = viewRotation(last.p, last.t);
+  const frames = anchors.map((a) => ({
+    distance: lengths[path.indexOf(a.point)],
+    rotation: a.rotation,
+  }));
+  if (frames.length === 1) frames.push({ distance: length, rotation: endQ });
   return {
     path,
     lengths,
@@ -104,13 +116,13 @@ export function createCameraJourney(
     rotation: rotation.clone(),
     startQ: rotation.clone(),
     endQ,
+    frames,
     elapsed: 0,
     duration: reduced
       ? 0.6
       : Math.max(
           duration,
-          length / (points[0].y >= 4.2 || asVector(last.p).y >= 4.2 ? 7 : 3.5),
-          rotation.angleTo(endQ) / 1.2,
+          points[0].y < 4.2 && asVector(last.p).y < 4.2 ? length / 4.7 : 0,
         ),
     reduced,
     done: false,
@@ -151,20 +163,19 @@ export function advanceCameraJourney(journey, delta) {
   if (journey.length < 0.05)
     desired = journey.startQ.clone().slerp(journey.endQ, ease(progress));
   else {
-    const ahead = pointAt(journey, Math.min(journey.length, distance + 1.4));
-    const behind = pointAt(journey, Math.max(0, distance - 0.4));
-    const heading = ahead.sub(behind);
-    const travel =
-      heading.lengthSq() > 0.00001
-        ? viewRotation(journey.position, journey.position.clone().add(heading))
-        : journey.endQ;
-    desired = journey.startQ
-      .clone()
-      .slerp(travel, ease(Math.min(1, progress / 0.2)))
-      .slerp(
-        journey.endQ,
-        ease(MathUtils.clamp((progress - 0.58) / 0.42, 0, 1)),
-      );
+    // Follow the authored framing, not the direction of movement. In particular,
+    // backing out of an artifact must never turn around to look behind us first.
+    const frames = journey.frames;
+    let i = 1;
+    while (i < frames.length - 1 && frames[i].distance < distance) i++;
+    const a = frames[i - 1],
+      b = frames[i];
+    const t = MathUtils.clamp(
+      (distance - a.distance) / Math.max(0.0001, b.distance - a.distance),
+      0,
+      1,
+    );
+    desired = a.rotation.clone().slerp(b.rotation, ease(t));
   }
   const angle = journey.rotation.angleTo(desired);
   journey.rotation.rotateTowards(

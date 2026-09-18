@@ -22,6 +22,7 @@ export function createWorld(
     exhibits = new THREE.Group();
   scene.add(exterior, house, roof, exhibits);
   const displays = [],
+    blockingPanels = [],
     treePositions = [];
   const colliders = [],
     hotspots = [],
@@ -889,6 +890,7 @@ export function createWorld(
     g.position.set(x, y, z);
     g.rotation.y = ry;
     exhibits.add(g);
+    blockingPanels.push(g);
     box(w + 0.14, h + 0.14, 0.095, 0, 0, 0, darkwood, g);
     box(w, h, 0.025, 0, 0, 0.062, color, g);
     for (const xx of [-w / 2, w / 2])
@@ -1368,7 +1370,7 @@ export function createWorld(
   // III — opposing triptychs and a split lectern. Six empty evidence panels, three pairs.
   box(8.3, 0.018, 11.5, 6.5, 0.43, -5, mat("#484737"), exhibits);
   for (let i = 0; i < 3; i++) {
-    const z = -8.6 + i * 3.25;
+    const z = [-9.3, -6.6, -0.95][i];
     panel(10.57, 2.6, z, 2.25, 2.2, -PI / 2, 3, `r3-claim-${i + 1}`, pale);
     panel(
       2.23,
@@ -1410,7 +1412,7 @@ export function createWorld(
     panel(
       side < 0 ? -10.58 : -2.25,
       2.88,
-      z,
+      side < 0 ? z : [-8.5, -6.2, -1][j],
       2,
       1.45,
       rotation,
@@ -1565,6 +1567,19 @@ export function createWorld(
     }),
   );
   scene.add(dust);
+  // Frames have real depth too. Register their final bounds after any tilt so
+  // navigation checks the visible displays as well as the structural walls.
+  for (const panel of blockingPanels) {
+    panel.updateWorldMatrix(true, true);
+    const bounds = new THREE.Box3().setFromObject(panel);
+    if (bounds.max.y < 1.6) continue;
+    colliders.push({
+      x1: bounds.min.x - 0.24,
+      x2: bounds.max.x + 0.24,
+      z1: bounds.min.z - 0.24,
+      z2: bounds.max.z + 0.24,
+    });
+  }
   // Merge static opaque meshes by material to keep the entire scene light enough for a browser.
   function mergeStatic(group) {
     group.updateMatrixWorld(true);

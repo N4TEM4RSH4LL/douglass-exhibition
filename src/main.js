@@ -14,6 +14,7 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { createWorld } from "./world.js";
 import { createCameraJourney, advanceCameraJourney } from "./camera-journey.js";
+import { views, roomJourney } from "./museum-views.js";
 import { connectExhibition } from "./exhibition-content.js";
 import { ROOMS } from "./exhibition-schema.js";
 
@@ -164,15 +165,6 @@ let interior = false,
   frameTimes = [],
   lastPerformance = performance.now(),
   autoQuality = false;
-const views = {
-  0: { p: [26, 12, 47], t: [0, 2, -2] },
-  1: { p: [-3.15, 2.3, 6.7], t: [-7, 1.85, 6.2] },
-  2: { p: [3.05, 2.5, 6.8], t: [7.3, 1.65, 6.4] },
-  3: { p: [3.15, 2.4, -3.6], t: [7.1, 2.03, -5.1] },
-  4: { p: [-3.15, 2.4, -3.6], t: [-7.1, 1.9, -5.5] },
-  5: { p: [0, 2.5, -12.2], t: [0, 2.1, -17.1] },
-  overview: { p: [27, 35, 34], t: [0, 0.6, -4] },
-};
 const vec = (a) => new THREE.Vector3(...a);
 const yawPitch = new THREE.Euler(0, 0, 0, "YXZ");
 function setCamera(pos, look) {
@@ -234,18 +226,8 @@ function navigate(next, { auto = false } = {}) {
     return;
   if (!auto) stopTour();
   if (document.pointerLockElement) document.exitPointerLock();
-  const points = [];
-  // Every indoor route starts at the actual camera, even when a previous journey is interrupted.
-  if (destination === 0) {
-    if (camera.position.y < 4.2)
-      points.push({ p: [0, 2.15, 24], t: [0, 2, 35] });
-    points.push(views[0]);
-  } else {
-    if (camera.position.y >= 4.2)
-      points.push({ p: [0, 2.4, 24], t: [0, 2.2, 9] });
-    points.push(views[destination]);
-  }
-  if (!fly(points, destination === 0 || room === 0 ? 6 : 3.8)) return;
+  const points = roomJourney(camera.position, destination);
+  if (!fly(points, destination === 0 ? 4.5 : room === 0 ? 6 : 3.2)) return;
   walking = false;
   overview = false;
   room = destination;

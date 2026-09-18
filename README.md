@@ -12,7 +12,7 @@ An explorable 3D museum with five connected galleries, set inside an interpretiv
 - Guided tour, architectural cutaway, free walking, drag-to-look, touch joystick and fullscreen.
 - Opt-in synthesized ambient sound; no recorded voices or autoplay.
 - Physically based materials, a photographed cloud panorama, distant shoreline, moving water, sun and exhibit lighting, shadows, dust, foliage, fields, cabins, cart and jetty.
-- Continuous camera journeys follow rounded, collision-checked paths. Room changes can be interrupted without jumping; camera turns have a bounded speed. Reduced-motion preferences use a fully covered fade.
+- Continuous camera journeys follow rounded, collision-checked paths through the doorways, with the original entrance and hallway framing. Artifact close-ups return directly to the gallery view without turning towards the direction of movement. Room changes can be interrupted without jumping; camera turns have a bounded speed. Reduced-motion preferences use a fully covered fade.
 - Reduced-motion support and a performance toggle. Public viewing; a class access key is required to share edits.
 
 ## Controls
@@ -56,7 +56,7 @@ npm run preview
 
 For local shared editing, put server variables in `.env.local` (see `.env.example`), initialize the database once with `npm run db:setup`, then run `npm run dev:api` in a second terminal. Vite proxies `/api` to port 5174. Never expose `DATABASE_URL` or the class key through `VITE_` variables.
 
-`npm test` checks the actual world’s shoreline, assignment bindings and all 36 camera routes against its collision geometry, plus 150 animated journeys including 125 interrupted room changes. `npm run test:persistence` uses an isolated random database namespace to verify auth, validation, concurrent writes, revision history, lost acknowledgements, offline drafts, stale focused edits and a real HTTP event stream. It removes only that test namespace afterward.
+`npm test` checks the actual world’s shoreline, assignment bindings and all 36 camera routes against its collision geometry, plus 150 animated journeys including 125 interrupted room changes. It also independently raycasts the camera and its near plane against rendered walls and exhibit frames during III↔IV and IV↔V transitions, checks that artifact exits do not pan away first, and preserves the six-second entrance timing without advancing across delayed frames. `npm run test:persistence` uses an isolated random database namespace to verify auth, validation, concurrent writes, revision history, lost acknowledgements, offline drafts, stale focused edits and a real HTTP event stream. It removes only that test namespace afterward.
 
 ## Class workflow and saving
 
