@@ -78,6 +78,14 @@ try {
     (await request("GET", null, "", true, "https://evil.example")).status,
     403,
   );
+  assert.equal(
+    (await request("PATCH", patch("constructor", "invalid"))).status,
+    400,
+  );
+  assert.equal(
+    (await request("PATCH", patch(["r1-symbol.title"], "invalid"))).status,
+    400,
+  );
   const same = await Promise.all([
     request("PATCH", patch("r1-symbol.title", "First writer")),
     request("PATCH", patch("r1-symbol.title", "Second writer")),

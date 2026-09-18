@@ -114,7 +114,7 @@ export default async function handler(req, res) {
       return respond(400, { error: "Invalid or oversized request." });
     }
     const { field, value, expectedRevision, mutationId } = body || {};
-    const def = FIELD_BY_ID[field];
+    const def = typeof field === "string" ? FIELD_BY_ID[field] : undefined;
     if (
       !def ||
       typeof value !== "string" ||

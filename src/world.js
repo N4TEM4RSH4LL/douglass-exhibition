@@ -473,6 +473,12 @@ export function createWorld(
   leaves.receiveShadow = true;
   exterior.add(leaves);
   function fence(x1, z1, x2, z2) {
+    colliders.push({
+      x1: Math.min(x1, x2) - 0.3,
+      x2: Math.max(x1, x2) + 0.3,
+      z1: Math.min(z1, z2) - 0.3,
+      z2: Math.max(z1, z2) + 0.3,
+    });
     const n = Math.ceil(Math.hypot(x2 - x1, z2 - z1) / 3.3);
     for (let i = 0; i <= n; i++) {
       let t = i / n,
@@ -611,8 +617,9 @@ export function createWorld(
   box(22.5, 0.45, 34.5, 0, 0.04, -4, brick);
   box(22, 0.13, 34, 0, 0.31, -4, wood);
   for (let z = -20.8; z < 13; z += 0.43) {
-    for (let x = -10.85; x < 11; x += 3.63) {
-      const b = box(3.6, 0.045, 0.4, x + 1.72, 0.397, z, wood);
+    for (let x = -10.82; x < 10.82; x += 3.62) {
+      const width = Math.min(3.58, 10.82 - x);
+      const b = box(width, 0.045, 0.4, x + width / 2, 0.397, z, wood);
       if (random() > 0.6) b.material = darkwood;
     }
   }
@@ -680,8 +687,8 @@ export function createWorld(
   // Glazed windows still form a physical boundary for free walking.
   for (const side of [-1, 1])
     colliders.push({
-      x1: side * 11 - 0.4,
-      x2: side * 11 + 0.4,
+      x1: side * 11 - 0.75,
+      x2: side * 11 + 0.75,
       z1: -21.3,
       z2: 13.3,
     });
@@ -824,6 +831,10 @@ export function createWorld(
     ring.position.set(0, 0.448, z);
     exhibits.add(ring);
   }
+  colliders.push(
+    { x1: -2.3, x2: 2.3, z1: -21, z2: -19.1 },
+    { x1: -0.7, x2: 0.7, z1: -18.35, z2: -17.05 },
+  );
   // Recessed fireplace and furnishings in the final room.
   box(3.8, 3.2, 0.42, 0, 2.0, -20.55, brick);
   box(2.2, 1.9, 0.47, 0, 1.36, -20.3, black);

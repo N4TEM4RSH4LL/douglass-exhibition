@@ -76,12 +76,15 @@ function screenTexture(display, data) {
   ctx.lineTo(w - pad, y);
   ctx.stroke();
   y += 24 * scale;
-  const content = data.quote || data.primary;
-  ctx.font = `${data.quote ? "italic " : ""}${body}px Georgia`;
+  const quoteShown = !!data.quote && !data.binding.field;
+  const content = data.binding.field
+    ? data.primary || data.quote
+    : data.quote || data.primary;
+  ctx.font = `${quoteShown ? "italic " : ""}${body}px Georgia`;
   ctx.fillStyle = "#354339";
   const max = Math.max(1, Math.floor((h - y - 88 * scale) / (body * 1.42)));
   const sample = content
-    ? `${data.quote ? "“" : ""}${content}${data.quote ? "”" : ""}`
+    ? `${quoteShown ? "“" : ""}${content}${quoteShown ? "”" : ""}`
     : "Awaiting the class contribution";
   for (const line of lines(ctx, sample, w - pad * 2, max)) {
     ctx.fillText(line, pad, y);

@@ -508,6 +508,8 @@ export const FIELD_BY_ID = Object.fromEntries(
     ]),
   ),
 );
+Object.setPrototypeOf(CARD_BY_ID, null);
+Object.setPrototypeOf(FIELD_BY_ID, null);
 export function displayBinding(id) {
   let m = id.match(/^r3-(claim|action)-(\d)$/);
   if (m)
@@ -572,7 +574,14 @@ export function getDisplay(id, values) {
   return {
     card,
     binding,
-    title: (isStage ? card.label + " · " : "") + (v.title || binding.label),
+    title:
+      (isStage
+        ? card.label + " · "
+        : binding.field === "claim"
+          ? "Claim · "
+          : binding.field === "action"
+            ? "Conduct · "
+            : "") + (v.title || binding.label),
     quote: v.quote,
     source: v.source,
     primary: binding.field

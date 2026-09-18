@@ -256,7 +256,7 @@ function closeArtifact() {
 function updateUI() {
   $("#entry").hidden = room !== 0 || overview;
   $("#arrival span").textContent = roman[room] || "";
-  $("#read-room").hidden = room === 0;
+  $("#read-room").hidden = room === 0 || overview;
   $("#read-room").textContent = room ? `Read Room ${roman[room]} ↗` : "";
   $$("#room-buttons button").forEach((b) => {
     const active = Number(b.dataset.room) === room;
@@ -359,6 +359,12 @@ const hotspotElements = world.hotspots.map((h) => {
   b.addEventListener("click", () => openArtifact(h));
   $("#hotspots").append(b);
   return { h, b };
+});
+exhibition.store.subscribe(() => {
+  for (const { h, b } of hotspotElements) {
+    b.title = exhibition.title(h.id);
+    b.setAttribute("aria-label", `Inspect ${exhibition.title(h.id)}`);
+  }
 });
 $("#enter").onclick = () => navigate(1);
 $("#home").onclick = () => navigate(0);
@@ -685,9 +691,12 @@ function animate() {
     camera.position.x = next[0];
     camera.position.z = next[1];
     camera.position.y =
-      (camera.position.z < 17.4 &&
-      camera.position.z > -21.4 &&
-      Math.abs(camera.position.x) < 11.5
+      ((camera.position.z < 17.4 &&
+        camera.position.z > -21.4 &&
+        Math.abs(camera.position.x) < 11.5) ||
+      (Math.abs(camera.position.x + 6) < 1.35 &&
+        camera.position.z < shoreline(-6) + 2 &&
+        camera.position.z > shoreline(-6) - 18)
         ? 2.08
         : 1.68) +
       (!reduced && delta.lengthSq() > 0 ? Math.sin(time * 9) * 0.018 : 0);
