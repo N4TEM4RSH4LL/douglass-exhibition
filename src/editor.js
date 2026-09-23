@@ -11,6 +11,10 @@ import {
   ASSIGNMENT_NOTE,
   cardProgress,
   getDisplay,
+  isJourneyEvent,
+  eventParagraph,
+  earlierEventWriting,
+  visibleCardFields,
   progress,
   wordCount,
 } from "./exhibition-schema.js";
@@ -164,32 +168,14 @@ function entryFieldsHTML(card) {
     ["image", "imageCaption", "imageCredit"].includes(f.key),
   );
   const imageFields = `<details class="previous-event-fields"><summary>Image, caption &amp; credit</summary>${photos.map((f) => fieldHTML(card, f)).join("")}</details>`;
-  if (/^r2-stage-\d$/.test(card.id)) {
+  if (isJourneyEvent(card.id)) {
     return (
-      fieldHTML(
-        card,
-        fields.find((f) => f.key === "analysis"),
-      ) +
-      `<details class="previous-event-fields"><summary>Event title, quotation &amp; source (optional)</summary>${fields
-        .filter((f) => ["title", "quote", "source"].includes(f.key))
+      visibleCardFields(card)
+        .filter((f) => !photos.includes(f))
         .map((f) => fieldHTML(card, f))
-        .join("")}</details>` +
+        .join("") +
       imageFields +
-      `<details class="previous-event-fields"><summary>Earlier detailed responses (preserved)</summary>${fields
-        .filter(
-          (f) =>
-            ![
-              "analysis",
-              "title",
-              "quote",
-              "source",
-              "image",
-              "imageCaption",
-              "imageCredit",
-            ].includes(f.key),
-        )
-        .map((f) => fieldHTML(card, f))
-        .join("")}</details>`
+      `<details class="previous-event-fields" data-earlier-wrap hidden><summary>Earlier saved writing (preserved)</summary><p data-earlier-event="${card.id}"></p></details>`
     );
   }
   return (
@@ -320,6 +306,13 @@ function renderChecklist(values) {
   );
 }
 function hydrateFields(values) {
+  for (const archive of $$("[data-earlier-event]")) {
+    archive.textContent = earlierEventWriting(
+      archive.dataset.earlierEvent,
+      values,
+    );
+    archive.closest("details").hidden = !archive.textContent;
+  }
   for (const heading of $$("[data-composition-title]"))
     heading.textContent =
       (heading.dataset.titlePrefix || "") +
@@ -336,9 +329,13 @@ function hydrateFields(values) {
       card = CARD_BY_ID[f.card],
       wrap = input.closest(".field"),
       pending = store.pending[id],
-      row = store.fields[id];
-    if (document.activeElement !== input && input.value !== (values[id] || ""))
-      input.value = values[id] || "";
+      row = store.fields[id],
+      value =
+        isJourneyEvent(card.id) && f.key === "analysis"
+          ? eventParagraph(card.id, values)
+          : values[id] || "";
+    if (document.activeElement !== input && input.value !== value)
+      input.value = value;
     if (!pending && input.value === (row?.value || ""))
       input.dataset.baseRevision = String(row?.revision || 0);
     if (f.type === "image") {
@@ -349,7 +346,7 @@ function hydrateFields(values) {
       preview.alt =
         values[`${card.id}.imageCaption`] || `Image for ${card.label}`;
     }
-    const count = wordCount(values[id]),
+    const count = wordCount(value),
       countNode = wrap.querySelector(".word-count");
     countNode.textContent =
       f.type === "image"
@@ -374,7 +371,9 @@ function hydrateFields(values) {
           : "Saved locally · pending"
         : row
           ? `${store.isOwnSave(row) ? "Your save" : row.writer || "Class contributor"} · v${row.revision}`
-          : "Not filled";
+          : value && isJourneyEvent(card.id) && f.key === "analysis"
+            ? "Earlier writing · originals preserved"
+            : "Not filled";
     state.classList.toggle("pending", !!pending);
     const conflict = wrap.querySelector(".field-conflict");
     conflict.hidden = !pending?.conflict;

@@ -1,4 +1,12 @@
-import { ROOMS, CARDS, CARD_BY_ID, getDisplay } from "./exhibition-schema.js";
+import {
+  ROOMS,
+  CARDS,
+  CARD_BY_ID,
+  getDisplay,
+  eventParagraph,
+  isJourneyEvent,
+  visibleCardFields,
+} from "./exhibition-schema.js";
 import { mediaURL } from "./exhibition-media.js";
 const esc = (s) =>
   String(s || "").replace(
@@ -15,7 +23,10 @@ export function compositionHTML(
 ) {
   const editable = !!field;
   const r = ROOMS[room - 1],
-    get = (id, key) => values[`${id}.${key}`] || "";
+    get = (id, key) =>
+      isJourneyEvent(id) && key === "analysis"
+        ? eventParagraph(id, values)
+        : values[`${id}.${key}`] || "";
   const photo = (id) => {
     if (editable)
       return `<details class="composition-image-fields"><summary>Image, caption &amp; credit</summary>${["image", "imageCaption", "imageCredit"].map((key) => field(id, key)).join("")}</details>`;
@@ -39,13 +50,13 @@ export function compositionHTML(
   const title = (id) => esc(getDisplay(id, values)?.title);
   const open = (id) =>
     audience &&
-    !CARD_BY_ID[id]?.fields.some(
-      (f) => f.key !== "title" && (values[`${id}.${f.key}`] || "").trim(),
+    !visibleCardFields(CARD_BY_ID[id]).some(
+      (f) => f.key !== "title" && getDisplay(id, values).values[f.key].trim(),
     )
       ? ""
       : `<button type="button" data-open-entry="${id}">${editable ? "All fields" : "View entry"} ↗</button>`;
   const entry = (id, body, number = "") =>
-    `<article class="composition-card" data-composition-card="${id}">${number ? `<span class="composition-number">${esc(number)}</span>` : ""}<h3 data-composition-title="${id}">${title(id)}</h3>${editable ? field(id, "title") : ""}${photo(id)}${body}${open(id)}</article>`;
+    `<article class="composition-card" data-composition-card="${id}">${number ? `<span class="composition-number">${esc(number)}</span>` : ""}<h3 data-composition-title="${id}">${title(id)}</h3>${editable ? field(id, "title") : ""}${isJourneyEvent(id) ? "" : photo(id)}${body}${isJourneyEvent(id) ? photo(id) : ""}${open(id)}</article>`;
   let body = "";
   if (room === 1) {
     body = `<div class="control-map"><div class="control-centre"><span>DOUGLASS</span>${photo("r1-symbol")}${text("r1-symbol", "context", "Douglass’s starting position")}${editable ? field("r1-symbol", "title") + field("r1-symbol", "meaning") : ""}${open("r1-symbol")}</div>${[1, 2, 3, 4].map((i) => entry(`r1-control-${i}`, quote(`r1-control-${i}`) + text(`r1-control-${i}`, "effect", "How it affects Douglass") + (editable ? field(`r1-control-${i}`, "method") : ""), String(i))).join("")}</div><div class="composition-connection"><h3>CONTROL → RESISTANCE</h3>${entry("r1-turning-point", quote("r1-turning-point") + text("r1-turning-point", "before", "Before") + text("r1-turning-point", "event", "The confrontation") + text("r1-turning-point", "after", "The turning point"))}${entry("r1-resistance", text("r1-resistance", "change", "What changes?") + text("r1-resistance", "connection", "Towards greater agency and freedom"))}</div>`;
@@ -56,13 +67,16 @@ export function compositionHTML(
         const id = `r2-stage-${i}`;
         return entry(
           id,
-          (editable || get(id, "analysis")
-            ? text(id, "analysis", "Analysis")
-            : `${get(id, "freedom") ? `<span class="freedom-type">${esc(get(id, "freedom"))}</span>` : ""}` +
-              text(id, "happens", "WHAT HAPPENS?") +
-              text(id, "changes", "WHAT CHANGES FOR DOUGLASS?") +
-              text(id, "method", "HOW DOES DOUGLASS PRESENT THE CHANGE?")) +
-            (!editable ? quote(id) : ""),
+          text(id, "analysis", "Event paragraph") +
+            quote(id) +
+            (editable
+              ? field(id, "freedom")
+              : get(id, "freedom")
+                ? `<span class="freedom-type">${esc(CARD_BY_ID[id].fields.find((f) => f.key === "freedom").options.find(([v]) => v === get(id, "freedom"))?.[1] || get(id, "freedom"))}</span>`
+                : "") +
+            (editable
+              ? `<details class="previous-event-fields" data-earlier-wrap hidden><summary>Earlier saved writing (preserved)</summary><p data-earlier-event="${id}"></p></details>`
+              : ""),
           `${i} / 5`,
         );
       })

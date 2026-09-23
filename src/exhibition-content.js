@@ -7,6 +7,7 @@ import {
   ROOMS,
   getDisplay,
   displayBinding,
+  visibleCardFields,
 } from "./exhibition-schema.js";
 const esc = (s) =>
   String(s ?? "").replace(
@@ -138,7 +139,9 @@ export function connectExhibition(world) {
       .querySelector("#artifact-panel")
       .setAttribute("aria-label", data.title);
     document.querySelector("#display-content").innerHTML =
-      `<span class="display-eyebrow">ROOM ${r.number} · ${esc(r.title)}</span><h1>${esc(data.title)}</h1>${!data.hasContent ? '<p class="display-empty">This exhibit is ready for your class contribution.</p>' : ""}${mediaURL(data.values.image) ? `<figure class="exhibit-image"><img src="${mediaURL(data.values.image)}" alt="${esc(data.values.imageCaption || card.label)}"><figcaption>${esc(data.values.imageCaption)}<small>${esc(data.values.imageCredit)}</small></figcaption></figure>` : ""}${card.fields
+      `<span class="display-eyebrow">ROOM ${r.number} · ${esc(r.title)}</span><h1>${esc(data.title)}</h1>${!data.hasContent ? '<p class="display-empty">This exhibit is ready for your class contribution.</p>' : ""}${mediaURL(data.values.image) ? `<figure class="exhibit-image"><img src="${mediaURL(data.values.image)}" alt="${esc(data.values.imageCaption || card.label)}"><figcaption>${esc(data.values.imageCaption)}<small>${esc(data.values.imageCredit)}</small></figcaption></figure>` : ""}${visibleCardFields(
+        card,
+      )
         .filter(
           (f) =>
             !["title", "image", "imageCaption", "imageCredit"].includes(
@@ -151,7 +154,13 @@ export function connectExhibition(world) {
         )
         .join(
           "",
-        )}<details class="display-guidance"><summary>What belongs in this exhibit</summary><p><strong>Assigned reading:</strong> ${esc(r.reading)}</p><p>${esc(card.guide)}</p><p><strong>Sequence:</strong> ${esc(r.chronology)}</p><ul>${card.fields.map((f) => `<li><strong>${esc(f.label)}:</strong> ${esc(f.help)}</li>`).join("")}</ul></details><a class="display-edit" href="./editor.html#card=${card.id}" target="_blank" rel="noopener">Contribute to this exhibit ↗</a>`;
+        )}<details class="display-guidance"><summary>What belongs in this exhibit</summary><p><strong>Assigned reading:</strong> ${esc(r.reading)}</p><p>${esc(card.guide)}</p><p><strong>Sequence:</strong> ${esc(r.chronology)}</p><ul>${visibleCardFields(
+        card,
+      )
+        .map((f) => `<li><strong>${esc(f.label)}:</strong> ${esc(f.help)}</li>`)
+        .join(
+          "",
+        )}</ul></details><a class="display-edit" href="./editor.html#card=${card.id}" target="_blank" rel="noopener">Contribute to this exhibit ↗</a>`;
   }
   store.subscribe(() => {
     const values = store.values();

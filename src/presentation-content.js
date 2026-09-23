@@ -1,4 +1,10 @@
-import { CARDS, CARD_BY_ID, ROOMS, getDisplay } from "./exhibition-schema.js";
+import {
+  CARDS,
+  ROOMS,
+  getDisplay,
+  isJourneyEvent,
+  visibleCardFields,
+} from "./exhibition-schema.js";
 import { mediaURL } from "./exhibition-media.js";
 export const escapeHTML = (value) =>
   String(value || "").replace(
@@ -12,8 +18,9 @@ export function presentationEntries(room, values) {
   return CARDS.filter(
     (c) =>
       c.room === room &&
-      c.fields.some(
-        (f) => f.key !== "title" && (values[`${c.id}.${f.key}`] || "").trim(),
+      visibleCardFields(c).some(
+        (f) =>
+          f.key !== "title" && getDisplay(c.id, values).values[f.key].trim(),
       ),
   );
 }
@@ -23,8 +30,7 @@ export function presentationEntryHTML(id, values) {
   const { card } = data,
     room = ROOMS[card.room - 1],
     v = data.values;
-  const consolidated = /^r2-stage-/.test(id) && !!v.analysis;
-  const fields = card.fields.filter(
+  const fields = visibleCardFields(card).filter(
     (f) =>
       ![
         "title",
@@ -33,12 +39,31 @@ export function presentationEntryHTML(id, values) {
         "imageCredit",
         "quote",
         "source",
-      ].includes(f.key) &&
-      v[f.key] &&
-      (!consolidated || f.key === "analysis"),
+      ].includes(f.key) && v[f.key],
   );
   const photo = mediaURL(v.image);
-  return `<article class="presentation-entry ${photo ? "has-image" : ""}" data-presentation-entry="${id}"><header><p class="presentation-eyebrow">ROOM ${room.number} · ${escapeHTML(room.feature)}</p><h1>${escapeHTML(data.title)}</h1></header><div class="presentation-entry-body">${photo ? `<figure><img src="${photo}" alt="${escapeHTML(v.imageCaption || card.label)}"><figcaption>${escapeHTML(v.imageCaption)}<small>${escapeHTML(v.imageCredit)}</small></figcaption></figure>` : ""}<div class="presentation-writing">${v.quote ? `<blockquote>${escapeHTML(v.quote)}${v.source ? `<cite>${escapeHTML(v.source)}</cite>` : ""}</blockquote>` : ""}${fields.map((f) => `<section>${fields.length > 1 ? `<h2>${escapeHTML(f.label)}</h2>` : ""}<p>${escapeHTML(f.options?.find(([value]) => value === v[f.key])?.[1] || v[f.key])}</p></section>`).join("")}${!v.quote && v.source ? `<p class="presentation-source">${escapeHTML(v.source)}</p>` : ""}</div></div></article>`;
+  const quote = v.quote
+    ? `<blockquote>${escapeHTML(v.quote)}${v.source ? `<cite>${escapeHTML(v.source)}</cite>` : ""}</blockquote>`
+    : "";
+  const source =
+    !v.quote && v.source
+      ? `<p class="presentation-source">${escapeHTML(v.source)}</p>`
+      : "";
+  const section = (f) =>
+    `<section>${fields.length > 1 && !(isJourneyEvent(card.id) && f.key === "analysis") ? `<h2>${escapeHTML(f.label)}</h2>` : ""}<p>${escapeHTML(f.options?.find(([value]) => value === v[f.key])?.[1] || v[f.key])}</p></section>`;
+  const writing = isJourneyEvent(card.id)
+    ? fields
+        .filter((f) => f.key === "analysis")
+        .map(section)
+        .join("") +
+      quote +
+      source +
+      fields
+        .filter((f) => f.key === "freedom")
+        .map(section)
+        .join("")
+    : quote + fields.map(section).join("") + source;
+  return `<article class="presentation-entry ${photo ? "has-image" : ""}" data-presentation-entry="${id}"><header><p class="presentation-eyebrow">ROOM ${room.number} · ${escapeHTML(room.feature)}</p><h1>${escapeHTML(data.title)}</h1></header><div class="presentation-entry-body">${photo ? `<figure><img src="${photo}" alt="${escapeHTML(v.imageCaption || card.label)}"><figcaption>${escapeHTML(v.imageCaption)}<small>${escapeHTML(v.imageCredit)}</small></figcaption></figure>` : ""}<div class="presentation-writing">${writing}</div></div></article>`;
 }
 export const FEATURE_ANCHORS = [
   { room: 1, position: [-7.5, 3.18, 6.4], icon: "map" },

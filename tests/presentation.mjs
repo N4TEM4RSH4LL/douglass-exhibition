@@ -87,6 +87,7 @@ for (let room = 1; room <= 5; room++) {
 }
 const values = {
   "r2-stage-1.analysis": "Consolidated response",
+  "r2-stage-1.freedom": "E+I",
   "r2-stage-1.happens": "Earlier detailed response",
   "r2-stage-2.title": "Title only",
   "r2-stage-3.happens": "Existing work from before the merge",
@@ -130,4 +131,75 @@ assert.ok(
 );
 console.log(
   "PASS: Room II consolidated analysis, old-response fallback, shared visual-editor bindings, audience filtering and escaped classroom slides.",
+);
+
+const { eventParagraph, visibleCardFields } =
+  await import("../src/exhibition-schema.js");
+const earlier = {
+  "r2-stage-1.happens": "The event.",
+  "r2-stage-1.changes": "Its effect.",
+  "r2-stage-1.method": "The authorial choice.",
+  "r2-stage-1.meaning": "The artifact connection.",
+  "r2-stage-1.quote": "Supporting quotation.",
+  "r2-stage-1.source": "Chapter 10",
+  "r2-stage-1.freedom": "I",
+};
+const paragraph =
+  "The event. Its effect. The authorial choice. The artifact connection.";
+assert.equal(eventParagraph("r2-stage-1", earlier), paragraph);
+assert.ok(
+  !Object.hasOwn(earlier, "r2-stage-1.analysis"),
+  "Showing earlier writing cannot modify shared data",
+);
+assert.equal(
+  eventParagraph("r2-stage-1", { ...earlier, "r2-stage-1.analysis": "" }),
+  "",
+);
+for (let i = 1; i <= 5; i++) {
+  const card = CARDS.find((c) => c.id === `r2-stage-${i}`);
+  assert.deepEqual(
+    visibleCardFields(card).map((f) => f.key),
+    [
+      "title",
+      "analysis",
+      "quote",
+      "source",
+      "freedom",
+      "image",
+      "imageCaption",
+      "imageCredit",
+    ],
+  );
+  const rendered = compositionHTML(2, earlier, {
+    field: (id, key) => `<input data-test-field="${id}.${key}">`,
+  });
+  const bound = [...rendered.matchAll(/data-test-field="([^"]+)"/g)]
+    .map((m) => m[1])
+    .filter((id) => id.startsWith(card.id + "."))
+    .map((id) => id.split(".")[1]);
+  assert.deepEqual(
+    bound,
+    visibleCardFields(card).map((f) => f.key),
+  );
+}
+const earlierSlide = presentationEntryHTML("r2-stage-1", earlier);
+assert.ok(earlierSlide.includes(paragraph));
+assert.ok(
+  earlierSlide.indexOf(paragraph) <
+    earlierSlide.indexOf("Supporting quotation."),
+);
+assert.ok(
+  earlierSlide.indexOf("Supporting quotation.") <
+    earlierSlide.indexOf("I — internal"),
+);
+assert.ok(!earlierSlide.includes("What happens?"));
+assert.ok(!compositionHTML(2, earlier).includes("WHAT HAPPENS?"));
+assert.ok(
+  cardProgress(
+    CARDS.find((c) => c.id === "r2-stage-1"),
+    earlier,
+  ).complete,
+);
+console.log(
+  "PASS: all five events share one paragraph, quote/source and freedom order; earlier writing is combined without rewriting or deleting originals.",
 );

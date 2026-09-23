@@ -31,7 +31,7 @@ export const ROOMS = [
     bridge:
       "Next: return to Chapters 9–10 and the Appendix to examine the religious hypocrisy within the system he resists.",
     summary:
-      "Create a visual journey through at least five important events. For every event, explain what happens, what changes for Douglass, and how he presents the change.",
+      "Create a Visual Journey with one paragraph for each of five events, in chronological order. Add a supporting quotation and label the kind of freedom separately.",
     requirements: [
       "At least five important events in Douglass’s journey towards freedom.",
       "For each event: what happens, what changes and how Douglass presents the change.",
@@ -236,12 +236,13 @@ for (let i = 1; i <= 5; i++)
     `r2-stage-${i}`,
     2,
     `Event ${i}${i === 1 ? " · earliest" : i === 5 ? " · latest" : ""}`,
-    "Choose an event from the second half of Chapter 10 or Chapter 11. Keep Events 1–5 in chronological order. Use one analysis to explain what happens, what changes, how Douglass presents the change, and whether the freedom is internal (I), external (E), or both.",
+    "Write one connected paragraph about this event. Keep Events 1–5 in chronological order, from the second half of Chapter 10 into Chapter 11. Add the quotation and kind of freedom below.",
     [
       f(
         "analysis",
-        `Analysis for Event ${i}`,
-        "In one connected response: identify the event and chapter, explain what happens and what changes for Douglass, analyse how his language or storytelling presents it, and say whether the freedom is internal (I), external (E), or both. Connect the symbolic artifact and add a quotation or source when useful.",
+        `Event ${i} paragraph`,
+        "In one paragraph, explain the event, its effect on Douglass, and how his language or storytelling presents that change. Work in the symbolic artifact’s connection where relevant. Put the quotation and freedom label in the fields below.",
+        { maxLength: 16000 },
       ),
       title(),
       f(
@@ -278,10 +279,10 @@ for (let i = 1; i <= 5; i++)
       meaning(),
     ],
   );
-// Preserve all earlier detailed responses and history; one analysis completes an event.
+// Old question fields remain addressable for backups and history, not as new prompts.
 for (const card of cards.filter((c) => /^r2-stage-\d$/.test(c.id)))
   for (const field of card.fields)
-    if (field.key !== "analysis") field.required = false;
+    field.required = ["analysis", "freedom"].includes(field.key);
 add(
   "r2-internal-freedom",
   2,
@@ -596,10 +597,41 @@ export function displayBinding(id) {
 }
 export const wordCount = (value) =>
   (value || "").trim().split(/\s+/).filter(Boolean).length;
+export const isJourneyEvent = (id) => /^r2-stage-[1-5]$/.test(id);
+export function earlierEventWriting(id, values) {
+  return ["happens", "changes", "method", "meaning"]
+    .map((key) => values[`${id}.${key}`] || "")
+    .filter((value) => value.trim())
+    .join(" ");
+}
+export function eventParagraph(id, values) {
+  const key = `${id}.analysis`;
+  // An explicitly cleared paragraph stays cleared; historical text is not revived.
+  return Object.hasOwn(values, key)
+    ? values[key]
+    : earlierEventWriting(id, values);
+}
+export function visibleCardFields(card) {
+  return isJourneyEvent(card.id)
+    ? [
+        "title",
+        "analysis",
+        "quote",
+        "source",
+        "freedom",
+        "image",
+        "imageCaption",
+        "imageCredit",
+      ].map((key) => card.fields.find((f) => f.key === key))
+    : card.fields;
+}
 export function cardProgress(card, values) {
   const required = card.fields.filter((f) => f.required);
   const completed = required.filter((f) =>
-    (values[`${card.id}.${f.key}`] || "").trim(),
+    (isJourneyEvent(card.id) && f.key === "analysis"
+      ? eventParagraph(card.id, values)
+      : values[`${card.id}.${f.key}`] || ""
+    ).trim(),
   ).length;
   const wordIssues = card.fields
     .filter((f) => f.wordRange && (values[`${card.id}.${f.key}`] || "").trim())
@@ -634,6 +666,7 @@ export function getDisplay(id, values) {
   const v = Object.fromEntries(
     card.fields.map((f) => [f.key, values[`${card.id}.${f.key}`] || ""]),
   );
+  if (isJourneyEvent(card.id)) v.analysis = eventParagraph(card.id, values);
   const isStage = card.id.startsWith("r4-stage-");
   return {
     card,
@@ -650,23 +683,24 @@ export function getDisplay(id, values) {
     source: v.source,
     primary: binding.field
       ? v[binding.field]
-      : (card.room === 2 && card.id.startsWith("r2-stage-") && v.analysis) ||
-        v.effect ||
-        v.happens ||
-        v.analysis ||
-        v.statement ||
-        v.change ||
-        v.meaning ||
-        v.argument ||
-        v.connection ||
-        v.after ||
-        v.context ||
-        v.interpretation ||
-        v.event ||
-        v.copy ||
-        "",
+      : isJourneyEvent(card.id)
+        ? v.analysis
+        : v.effect ||
+          v.happens ||
+          v.analysis ||
+          v.statement ||
+          v.change ||
+          v.meaning ||
+          v.argument ||
+          v.connection ||
+          v.after ||
+          v.context ||
+          v.interpretation ||
+          v.event ||
+          v.copy ||
+          "",
     method: v.method || "",
     values: v,
-    hasContent: Object.values(v).some((s) => s.trim()),
+    hasContent: visibleCardFields(card).some((f) => v[f.key].trim()),
   };
 }
