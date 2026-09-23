@@ -4,7 +4,8 @@ An explorable 3D museum with five connected galleries, set inside an interpretiv
 
 ## Experience
 
-- A readable presentation opening names Nate Marshall, Layla Decaires, Marianna McKenzie and Lucas Maguire. The title sheet fractures into the original cinematic arrival; Enter starts it, and a skip control / reduced-motion fade remains available. The Aa button reopens the slide.
+- A classroom title slide names Nate Marshall, Layla Decaires, Marianna McKenzie and Lucas Maguire, with a clear title, guiding question and original book cover. The title sheet fractures into the original cinematic arrival; Enter starts presentation mode, and a skip control / reduced-motion fade remains available. The Aa button reopens the slide.
+- Separate **Start presentation** and **Explore full museum** modes. Presentation mode removes exploration controls and editing prompts, with large reading pages, room navigation and fullscreen. The full museum retains all exploration tools.
 - Cinematic arrival across the grounds and through the front entrance.
 - Five numbered galleries connected by a central hall.
 - Clickable symbolic objects, live text panels and a room-by-room reading view.
@@ -12,6 +13,7 @@ An explorable 3D museum with five connected galleries, set inside an interpretiv
 - Shared Postgres storage, individual field autosaves, conflict review, version history and JSON backups. Saves carry exact mutation identities, so continuing to type after your own save is acknowledged does not create a false classmate conflict. Tabs keep separate local drafts, with explicit recovery of unsaved work from closed tabs.
 - Optional JPEG / PNG / WebP uploads, captions and credits for every entry. Photos appear on the physical museum screens, in full entries and in the room compositions.
 - Control Map, Visual Journey, Contradiction Wall, Identity Archive and Curator’s Statement compositions use the assignment’s feature titles and connect saved writing and images in the requested order.
+- A labelled icon inside each room opens its feature. The studio's **Edit [feature]** view edits that layout directly, using the same live fields, images, revision history and conflict handling as individual entries.
 - Guided tour, architectural cutaway, free walking, drag-to-look, touch joystick and fullscreen.
 - Opt-in synthesized ambient sound; no recorded voices or autoplay.
 - Physically based materials, a photographed cloud panorama, distant shoreline, moving water, sun and exhibit lighting, shadows, dust, foliage, fields, cabins, cart and jetty.
@@ -20,6 +22,10 @@ An explorable 3D museum with five connected galleries, set inside an interpretiv
 - Reduced-motion support and a performance toggle. Public viewing; a class access key is required to share edits.
 
 ## Controls
+
+For class, choose **Start presentation** on the title slide or open `/?mode=presentation`. Use Right Arrow / Page Down to open a room feature, advance through its filled entries, then move to the next room. Left Arrow / Page Up goes back. The navigation bar can skip directly between rooms; **F** toggles fullscreen. Room V returns to the title slide. **Exit presentation** switches to full exploration. A room can be linked directly with `/?mode=presentation#room=2`.
+
+In the full museum:
 
 Click the entrance icon or a Roman numeral to visit a room. Drag the view to look around. Click a small circular exhibit marker to inspect a display; close its panel with the cross or Escape. The play icon starts a guided tour. The stacked-layers icon opens the architectural cutaway.
 
@@ -38,6 +44,8 @@ The user's supplied `Exhibition.docx` and updated `THE DOUGLASS EXHIBITION.pdf` 
 | V       | Writing desk, suspended blank pages and eight quotation panels | Eight quotations, curator statement and synthesis                                                  |
 
 The room order follows the assignment: its thematic return to Chapters 9–10 in Room III is intentional. The five-event Visual Journey and six identity stages explicitly guide chronological ordering within those features. The prompts do not claim that the entire museum is a strictly linear biography.
+
+Room II's isolated simplification is integrated: each of the five events has one main **Analysis** field, with optional title, quotation and image details. Earlier detailed responses remain accessible under **Earlier detailed responses (preserved)**. The museum uses the connected analysis when filled, otherwise it continues to display earlier responses. No saved writing is migrated or deleted. Presentation pages omit empty responses and preserve the assignment's room and event order.
 
 Each interactive location has a stable slot ID, such as `r2-stage-3` or `r5-curator-statement`. Geometry lives in `src/world.js`; the shared content model and guidance live in `src/exhibition-schema.js`. `src/exhibition-content.js` draws saved content onto the screens and renders the full entry. No quotations, historical arguments or completed student answers are prefilled.
 
@@ -68,7 +76,7 @@ For local shared editing, put server variables in `.env.local` (see `.env.exampl
 
 1. Open `/editor.html` or choose **Exhibition studio** in the museum.
 2. Choose **Enter class key** and use the owner-supplied class key. An optional name or initials appears in version history; it is a display label, not an authenticated identity.
-3. Select a room and an entry. Each field explains exactly what belongs there, including exact quotations, references, authorial choices and artifact interpretations.
+3. Select a room and an entry, or choose **Edit [feature]** to fill the visual layout directly. Each field explains exactly what belongs there, including exact quotations, references, authorial choices and artifact interpretations. Image uploads, captions and credits expand within each entry. Use **All fields** for its complete response form.
 4. Typing writes an immediate browser draft and queues a shared save. Wait for **Live · all changes saved** (or **All changes saved to the shared exhibition** during fallback) before closing or presenting. A local-only draft is not yet visible to classmates.
 5. The studio and museum receive live server-sent updates while visible. Saves handled by the same server instance broadcast immediately after the database commits; changes from other instances are picked up by a one-second database check. The connection renews automatically and falls back to a three-second refresh during interruptions. Physical screens show an excerpt; exhibit views show the complete submitted content. **Read Room** opens every entry without requiring precise 3D navigation.
 6. Use **Version history** to restore previous saves, or **Download backup** to keep a portable JSON copy. **Restore from backup** previews the changed fields before queuing them. Downloaded backups contain writing, not the class access key.

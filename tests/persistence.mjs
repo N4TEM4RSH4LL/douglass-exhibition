@@ -155,6 +155,37 @@ try {
   const reload = await request("GET", null, "", false);
   assert.equal(reload.body.fields["r1-symbol.title"].value, winner.value);
   assert.equal(reload.body.fields["r1-symbol.context"].value, "Context");
+  // Consolidated Room II writing must coexist with earlier detailed responses.
+  assert.equal(
+    (
+      await request(
+        "PATCH",
+        patch("r2-stage-1.happens", "Earlier event response"),
+      )
+    ).status,
+    200,
+  );
+  const roomII = await Promise.all([
+    request(
+      "PATCH",
+      patch("r2-stage-1.analysis", "One connected event analysis"),
+    ),
+    request("PATCH", patch("r2-stage-1.changes", "Earlier change response")),
+  ]);
+  assert.ok(roomII.every((r) => r.status === 200));
+  const roomIIReload = (await request()).body.fields;
+  assert.equal(
+    roomIIReload["r2-stage-1.analysis"].value,
+    "One connected event analysis",
+  );
+  assert.equal(
+    roomIIReload["r2-stage-1.happens"].value,
+    "Earlier event response",
+  );
+  assert.equal(
+    roomIIReload["r2-stage-1.changes"].value,
+    "Earlier change response",
+  );
   console.log(
     "PASS: real database auth, input validation, CORS, independent edits, same-field conflicts, idempotent retries, reload and version restore.",
   );

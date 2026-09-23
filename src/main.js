@@ -1,6 +1,13 @@
 import "./style.css";
 import "./opening-slide.css";
 import "./room-composition.css";
+import "./presentation.css";
+import {
+  presentationEntries,
+  presentationEntryHTML,
+  FEATURE_ANCHORS,
+  featureIcon,
+} from "./presentation-content.js";
 import { compositionHTML } from "./room-composition.js";
 import { createOpening } from "./opening-slide.js";
 import * as THREE from "three";
@@ -71,10 +78,17 @@ const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const initialRoom = Number(
   new URLSearchParams(location.hash.slice(1)).get("room"),
 );
+let presentationMode =
+  new URLSearchParams(location.search).get("mode") === "presentation";
+let presentationEntry = null;
+let lastCompositionValues = "";
 const opening = createOpening({
   reduced,
   directRoom: initialRoom >= 1 && initialRoom <= 5,
-  onEnter: () => navigate(1),
+  onEnter: ({ mode }) => {
+    setPresentationMode(mode === "presentation");
+    navigate(1);
+  },
   onReplay: () => {
     stopTour();
     closeArtifact();
@@ -238,6 +252,7 @@ function updateUI() {
   $("#overview").setAttribute("aria-pressed", String(overview));
   $("#artifact-panel").open && $("#artifact-panel").close();
   focus = null;
+  updatePresentationControls();
 }
 function navigate(next, { auto = false } = {}) {
   const destination = Math.min(5, Math.max(0, next));
@@ -254,7 +269,11 @@ function navigate(next, { auto = false } = {}) {
   world.roof.visible = true;
   renderer.shadowMap.needsUpdate = true;
   updateUI();
-  history.replaceState(null, "", room ? `#room=${room}` : location.pathname);
+  history.replaceState(
+    null,
+    "",
+    location.pathname + location.search + (room ? `#room=${room}` : ""),
+  );
 }
 function openArtifact(h) {
   if (transition || walking || overview) return;
@@ -292,6 +311,18 @@ const hotspotElements = world.hotspots.map((h) => {
   b.addEventListener("click", () => openArtifact(h));
   $("#hotspots").append(b);
   return { h, b };
+});
+const roomFeatureElements = FEATURE_ANCHORS.map((anchor) => {
+  const b = document.createElement("button"),
+    r = ROOMS[anchor.room - 1];
+  b.className = "room-feature-hotspot";
+  b.hidden = true;
+  b.dataset.featureRoom = anchor.room;
+  b.setAttribute("aria-label", `Open ${r.feature} in Room ${r.number}`);
+  b.innerHTML = featureIcon(anchor.room) + `<span>${r.feature}</span>`;
+  b.onclick = () => openRoomFeature();
+  $("#room-features").append(b);
+  return { ...anchor, position: new THREE.Vector3(...anchor.position), b };
 });
 exhibition.store.subscribe(() => {
   for (const { h, b } of hotspotElements) {
@@ -403,6 +434,19 @@ $("#walk").onclick = walk;
 const keys = new Set();
 window.addEventListener("keydown", (e) => {
   if (opening.active) return;
+  if (presentationMode && !e.target.closest("input,textarea,select")) {
+    if (
+      ["ArrowRight", "PageDown", "Space", "ArrowLeft", "PageUp"].includes(
+        e.code,
+      )
+    ) {
+      if (e.code === "Space" && e.target.closest("button,a")) return;
+      e.preventDefault();
+      if (!e.repeat)
+        stepPresentation(["ArrowLeft", "PageUp"].includes(e.code) ? -1 : 1);
+    } else if (e.code === "KeyF" && !e.repeat) $("#fullscreen").click();
+    return;
+  }
   if ($("#room-reader").open) return;
   if (e.target.closest("input,textarea,select")) return;
   if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key))
@@ -601,6 +645,7 @@ function animate() {
       transition = null;
       idleTime = 0;
       tr.onDone?.();
+      updatePresentationControls();
     }
   } else if (walking) {
     const speed = (keys.has("ShiftLeft") ? 5.5 : 3.2) * dt;
@@ -736,6 +781,28 @@ function animate() {
       b.style.top = `${(-projected.y * 0.5 + 0.5) * innerHeight}px`;
     }
   });
+  for (const marker of roomFeatureElements) {
+    if (
+      marker.room !== room ||
+      transition ||
+      overview ||
+      focus ||
+      opening.active
+    ) {
+      marker.b.hidden = true;
+      continue;
+    }
+    projected.copy(marker.position).project(camera);
+    marker.b.hidden =
+      projected.z <= 0 ||
+      projected.z >= 1 ||
+      Math.abs(projected.x) > 0.86 ||
+      Math.abs(projected.y) > 0.83;
+    if (!marker.b.hidden) {
+      marker.b.style.left = `${(projected.x * 0.5 + 0.5) * innerWidth}px`;
+      marker.b.style.top = `${(-projected.y * 0.5 + 0.5) * innerHeight}px`;
+    }
+  }
   $("#plan-position").setAttribute(
     "cx",
     String(
@@ -779,7 +846,7 @@ function animate() {
   }
 }
 $("#read-room").onclick = () => {
-  $("#room-reader").classList.remove("composition-view");
+  $("#room-reader").classList.remove("composition-view", "presentation-view");
   stopTour();
   if (document.pointerLockElement) document.exitPointerLock();
   walking = false;
@@ -813,35 +880,158 @@ $("#read-room").onclick = () => {
   }
   $("#room-reader").showModal();
 };
+function updatePresentationControls() {
+  const r = ROOMS[room - 1];
+  $("#presentation-controls").hidden = !presentationMode;
+  $("#presentation-counter").textContent = r
+    ? `ROOM ${r.number} / V`
+    : "THE GROUNDS";
+  $("#presentation-room-name").textContent = r
+    ? r.feature
+    : "The Douglass Exhibition";
+  $("#presentation-feature").textContent = r
+    ? `Open ${r.feature}`
+    : "Enter the exhibition";
+  $("#presentation-next").textContent =
+    room === 5 ? "Title slide ↗" : "Next room →";
+  $("#presentation-prev").disabled = room <= 1 || !!transition;
+  $("#presentation-next").disabled = !!transition;
+  $("#presentation-feature").disabled = !!transition;
+}
+function setPresentationMode(enabled) {
+  presentationMode = enabled;
+  document.body.classList.toggle("presentation-mode", enabled);
+  document.body.classList.remove("ui-hidden");
+  stopTour();
+  if ($("#room-reader").open) $("#room-reader").close();
+  if ($("#artifact-panel").open) $("#artifact-panel").close();
+  presentationEntry = null;
+  const url = new URL(location.href);
+  if (enabled) url.searchParams.set("mode", "presentation");
+  else url.searchParams.delete("mode");
+  history.replaceState(null, "", url.pathname + url.search + url.hash);
+  updatePresentationControls();
+}
+function presentationRoom(direction) {
+  if (transition) return;
+  if ($("#room-reader").open) $("#room-reader").close();
+  presentationEntry = null;
+  if (room === 5 && direction > 0) {
+    $("#replay-opening").click();
+    return;
+  }
+  navigate(Math.max(1, Math.min(5, room + direction)));
+}
+function stepPresentation(direction) {
+  if (transition) return;
+  if (!$("#room-reader").open) {
+    if (direction > 0 && room > 0) openRoomFeature();
+    else presentationRoom(direction);
+    return;
+  }
+  const entries = presentationEntries(room, exhibition.store.values());
+  const index = entries.findIndex((c) => c.id === presentationEntry);
+  if (direction > 0 && index >= entries.length - 1) {
+    presentationRoom(1);
+    return;
+  }
+  if (direction < 0 && index === -1) {
+    $("#room-reader").close();
+    return;
+  }
+  presentationEntry = entries[index + direction]?.id || null;
+  renderRoomComposition();
+  $("#room-reader").scrollTop = 0;
+}
 function renderRoomComposition() {
-  const el = $("#room-reader-content");
-  el.innerHTML = compositionHTML(room, exhibition.store.values());
+  const el = $("#room-reader-content"),
+    r = ROOMS[room - 1],
+    values = exhibition.store.values();
+  lastCompositionValues = JSON.stringify(values);
+  const focused = el.contains(document.activeElement)
+    ? document.activeElement
+    : null;
+  const focusTarget = focused?.hasAttribute("data-page-prev")
+    ? "[data-page-prev]"
+    : focused?.hasAttribute("data-page-next")
+      ? "[data-page-next]"
+      : focused?.dataset.openEntry
+        ? `[data-open-entry="${focused.dataset.openEntry}"]`
+        : null;
+  const entries = presentationEntries(room, values);
+  if (presentationEntry && !entries.some((c) => c.id === presentationEntry))
+    presentationEntry = null;
+  const index = entries.findIndex((c) => c.id === presentationEntry);
+  $("#room-reader").classList.toggle("presentation-view", presentationMode);
+  if (presentationMode) {
+    el.innerHTML =
+      `<nav class="presentation-pages" aria-label="Room presentation pages"><button type="button" data-page-prev>${index < 0 ? "← Room view" : "← Back"}</button><span>${index < 0 ? r.feature : `${index + 1} / ${entries.length}`}</span><button type="button" data-page-next>${index >= entries.length - 1 ? (room === 5 ? "Title slide →" : "Next room →") : "Next entry →"}</button></nav>` +
+      (presentationEntry
+        ? presentationEntryHTML(presentationEntry, values)
+        : compositionHTML(room, values, { audience: true }));
+    el.querySelector("[data-page-prev]").onclick = () => stepPresentation(-1);
+    el.querySelector("[data-page-next]").onclick = () => stepPresentation(1);
+  } else {
+    el.innerHTML =
+      `<div class="feature-reader-actions"><a href="./editor.html#room=${room}&view=feature" target="_blank" rel="noopener">Edit ${r.feature} ↗</a><button type="button" id="present-feature-view">Present this room</button></div>` +
+      compositionHTML(room, values);
+    el.querySelector("#present-feature-view").onclick = () => {
+      setPresentationMode(true);
+      openRoomFeature();
+    };
+  }
   el.querySelectorAll("[data-open-entry]").forEach(
     (b) =>
       (b.onclick = () => {
-        $("#room-reader").close();
-        exhibition.show(b.dataset.openEntry);
-        $("#artifact-panel").show();
+        if (presentationMode) {
+          presentationEntry = b.dataset.openEntry;
+          renderRoomComposition();
+          $("#room-reader").scrollTop = 0;
+        } else {
+          $("#room-reader").close();
+          exhibition.show(b.dataset.openEntry);
+          $("#artifact-panel").show();
+        }
       }),
   );
+  if (focusTarget)
+    el.querySelector(focusTarget)?.focus({ preventScroll: true });
 }
-$("#feature-room").onclick = () => {
+function openRoomFeature() {
+  if (room === 0) {
+    navigate(1);
+    return;
+  }
+  if (transition) return;
   stopTour();
   if (document.pointerLockElement) document.exitPointerLock();
   walking = false;
   updateUI();
+  presentationEntry = null;
   $("#room-reader").classList.add("composition-view");
   renderRoomComposition();
   $("#room-reader").showModal();
+}
+$("#feature-room").onclick = openRoomFeature;
+$("#presentation-feature").onclick = openRoomFeature;
+$("#presentation-prev").onclick = () => presentationRoom(-1);
+$("#presentation-next").onclick = () => presentationRoom(1);
+$("#presentation-fullscreen").onclick = () => $("#fullscreen").click();
+$("#exit-presentation").onclick = () => setPresentationMode(false);
+$("#switch-presentation").onclick = () => {
+  setPresentationMode(true);
+  navigate(room || 1);
 };
 exhibition.store.subscribe(() => {
   if (
     $("#room-reader").open &&
-    $("#room-reader").classList.contains("composition-view")
+    $("#room-reader").classList.contains("composition-view") &&
+    lastCompositionValues !== JSON.stringify(exhibition.store.values())
   )
     renderRoomComposition();
 });
 $("#close-room-reader").onclick = () => $("#room-reader").close();
+setPresentationMode(presentationMode);
 updateUI();
 animate();
 if (initialRoom >= 1 && initialRoom <= 5)

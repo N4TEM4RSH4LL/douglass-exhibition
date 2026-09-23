@@ -61,7 +61,8 @@ export function createOpening({
   const root = document.querySelector("#opening-slide"),
     surface = root.querySelector(".opening-page");
   const begin = root.querySelector("#begin-exhibition"),
-    skip = root.querySelector("#skip-opening");
+    skip = root.querySelector("#skip-opening"),
+    explore = root.querySelector("#explore-exhibition");
   const status = root.querySelector("#opening-status");
   root.querySelector(".opening-question").textContent = QUESTION;
   let ready = false,
@@ -75,6 +76,8 @@ export function createOpening({
     "#modes",
     "#hotspots",
     "#world",
+    "#room-features",
+    "#presentation-controls",
   ].map((s) => document.querySelector(s));
   function show(value) {
     active = value;
@@ -89,13 +92,17 @@ export function createOpening({
     busy = false;
     show(false);
     document
-      .querySelector("#room-buttons button")
+      .querySelector(
+        document.body.classList.contains("presentation-mode")
+          ? "#presentation-feature"
+          : "#room-buttons button",
+      )
       ?.focus({ preventScroll: true });
   }
-  async function enter({ shatter = true } = {}) {
+  async function enter({ shatter = true, mode = "presentation" } = {}) {
     if (!ready || busy || !active) return;
     busy = true;
-    begin.disabled = skip.disabled = true;
+    begin.disabled = skip.disabled = explore.disabled = true;
     status.textContent = "Entering the exhibition…";
     if (!shatter || reduced) {
       if (shatter)
@@ -104,7 +111,7 @@ export function createOpening({
           fill: "forwards",
         }).finished;
       surface.getAnimations().forEach((a) => a.cancel());
-      onEnter();
+      onEnter({ mode });
       finish();
       return;
     }
@@ -149,7 +156,7 @@ export function createOpening({
       fill: "forwards",
     });
     // Keep the authored entrance journey; only the title sheet moves away.
-    onEnter();
+    onEnter({ mode });
     const flights = animations.map(
       ({ shard, piece }) =>
         shard.animate(
@@ -182,6 +189,7 @@ export function createOpening({
     finish();
   }
   begin.onclick = () => enter();
+  explore.onclick = () => enter({ mode: "explore" });
   skip.onclick = () => enter({ shatter: false });
   root.addEventListener("keydown", (e) => {
     if (
@@ -198,9 +206,9 @@ export function createOpening({
     onReplay();
     surface.hidden = false;
     show(true);
-    begin.disabled = skip.disabled = !ready;
+    begin.disabled = skip.disabled = explore.disabled = !ready;
     status.textContent = ready
-      ? "Press Enter or begin when your class is ready."
+      ? "Press Enter to present · Use ← / → to move through the rooms."
       : "Preparing the museum…";
   };
   show(active);
@@ -211,8 +219,9 @@ export function createOpening({
     setReady() {
       ready = true;
       if (!busy) {
-        begin.disabled = skip.disabled = false;
-        status.textContent = "Press Enter or begin when your class is ready.";
+        begin.disabled = skip.disabled = explore.disabled = false;
+        status.textContent =
+          "Press Enter to present · Use ← / → to move through the rooms.";
       }
     },
   };

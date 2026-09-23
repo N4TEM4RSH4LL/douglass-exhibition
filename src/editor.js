@@ -10,6 +10,7 @@ import {
   QUESTION,
   ASSIGNMENT_NOTE,
   cardProgress,
+  getDisplay,
   progress,
   wordCount,
 } from "./exhibition-schema.js";
@@ -29,7 +30,14 @@ const fragment = new URLSearchParams(location.hash.slice(1));
 let selected = CARD_BY_ID[fragment.get("card")]
     ? fragment.get("card")
     : CARDS[0].id,
-  showOverview = false;
+  showOverview = false,
+  featureEditing = fragment.get("view") === "feature";
+if (
+  featureEditing &&
+  Number(fragment.get("room")) >= 1 &&
+  Number(fragment.get("room")) <= 5
+)
+  selected = CARDS.find((c) => c.room === Number(fragment.get("room"))).id;
 const initialKey = fragment.get("access");
 if (initialKey) {
   fragment.delete("access");
@@ -49,7 +57,17 @@ function select(id) {
   if (!CARD_BY_ID[id]) return;
   selected = id;
   showOverview = false;
+  featureEditing = false;
   history.replaceState(null, "", `#card=${encodeURIComponent(id)}`);
+  renderKey = "";
+  render();
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+function editFeature(room = roomOfSelection()) {
+  selected = CARDS.find((c) => c.room === room).id;
+  showOverview = false;
+  featureEditing = true;
+  history.replaceState(null, "", `#room=${room}&view=feature`);
   renderKey = "";
   render();
   window.scrollTo({ top: 0, behavior: "instant" });
@@ -74,8 +92,12 @@ function renderNavigation(values) {
   $$("#room-tabs button").forEach(
     (b) =>
       (b.onclick = () =>
-        select(CARDS.find((c) => c.room === Number(b.dataset.room)).id)),
+        featureEditing
+          ? editFeature(Number(b.dataset.room))
+          : select(CARDS.find((c) => c.room === Number(b.dataset.room)).id)),
   );
+  $("#edit-feature").textContent = `Edit ${ROOMS[room - 1].feature}`;
+  $("#edit-feature").classList.toggle("active", featureEditing);
   $$(".card-link").forEach((b) => (b.onclick = () => select(b.dataset.card)));
 }
 function status() {
@@ -136,14 +158,87 @@ function fieldHTML(card, f) {
             : `<textarea id="field-${id}" data-field="${id}" maxlength="${f.maxLength}" rows="${f.targetWords ? 7 : f.key === "quote" ? 4 : 5}"></textarea>`;
   return `<div class="field ${f.key === "quote" ? "quote" : ""}" data-field-wrap="${id}"><div class="field-label-row"><label for="field-${id}">${esc(f.label)}${f.required ? "" : ' <span class="optional-field">(optional)</span>'}</label><span class="field-state"></span></div><p class="field-help" id="help-${id}">${esc(f.help)}</p>${input}<div class="field-tools"><span class="word-count" data-count="${id}"></span><button class="history-button" type="button" data-history="${id}">Version history</button></div><div class="field-conflict" hidden></div></div>`;
 }
+function entryFieldsHTML(card) {
+  const fields = card.fields;
+  const photos = fields.filter((f) =>
+    ["image", "imageCaption", "imageCredit"].includes(f.key),
+  );
+  const imageFields = `<details class="previous-event-fields"><summary>Image, caption &amp; credit</summary>${photos.map((f) => fieldHTML(card, f)).join("")}</details>`;
+  if (/^r2-stage-\d$/.test(card.id)) {
+    return (
+      fieldHTML(
+        card,
+        fields.find((f) => f.key === "analysis"),
+      ) +
+      `<details class="previous-event-fields"><summary>Event title, quotation &amp; source (optional)</summary>${fields
+        .filter((f) => ["title", "quote", "source"].includes(f.key))
+        .map((f) => fieldHTML(card, f))
+        .join("")}</details>` +
+      imageFields +
+      `<details class="previous-event-fields"><summary>Earlier detailed responses (preserved)</summary>${fields
+        .filter(
+          (f) =>
+            ![
+              "analysis",
+              "title",
+              "quote",
+              "source",
+              "image",
+              "imageCaption",
+              "imageCredit",
+            ].includes(f.key),
+        )
+        .map((f) => fieldHTML(card, f))
+        .join("")}</details>`
+    );
+  }
+  return (
+    fields
+      .filter((f) => !photos.includes(f))
+      .map((f) => fieldHTML(card, f))
+      .join("") + imageFields
+  );
+}
+function renderFeatureEditor() {
+  const room = roomOfSelection(),
+    r = ROOMS[room - 1];
+  $("#content").innerHTML =
+    `<header class="room-intro"><span class="eyebrow">ROOM ${r.number} · EDIT THE ROOM FEATURE</span><h1>${esc(r.feature)}</h1><p>Edit the text and images directly in the layout. Each box saves to the same shared exhibition.</p><div class="feature-editor-actions"><button class="button" id="show-entry-editor">Edit one entry at a time</button><a class="button" href="./?mode=presentation#room=${room}" target="_blank" rel="noopener">Present this room ↗</a></div></header><form id="entry-form">${compositionHTML(
+      room,
+      store.values(),
+      {
+        field: (id, key) => {
+          const c = CARD_BY_ID[id],
+            f = c.fields.find((f) => f.key === key);
+          return f ? fieldHTML(c, f) : "";
+        },
+      },
+    )}</form>`;
+  $("#entry-form").onsubmit = (e) => e.preventDefault();
+  $("#show-entry-editor").onclick = () => select(selected);
+  $("#content")
+    .querySelectorAll("[data-open-entry]")
+    .forEach((b) => (b.onclick = () => select(b.dataset.openEntry)));
+  bindFields();
+}
 function renderEntry() {
   const card = CARD_BY_ID[selected],
     r = ROOMS[card.room - 1],
     index = CARDS.indexOf(card),
     next = CARDS[index + 1];
   $("#content").innerHTML =
-    `<header class="room-intro"><span class="eyebrow">ROOM ${r.number} · EXHIBITION STUDIO</span><h1>${esc(r.title)}</h1><p>${esc(r.summary)}</p><div class="reading"><span>Reading</span>${esc(r.reading)}</div><aside class="chronology-guide"><strong>Sequence &amp; connection</strong><p>${esc(r.chronology)}</p><p>${esc(r.bridge)}</p></aside></header><article class="entry-card"><div class="entry-heading"><div><h2>${esc(card.label)}</h2><p>${esc(card.guide)}</p></div><span class="entry-progress" id="entry-progress"></span></div><form id="entry-form">${card.fields.map((f) => fieldHTML(card, f)).join("")}</form></article><details class="composition-preview"><summary>Preview ${esc(r.feature)}</summary><div id="composition-preview"></div></details><div class="entry-bottom"><a href="./#room=${card.room}" target="_blank" rel="noopener">See Room ${r.number} in the museum ↗</a>${next ? `<button class="button" id="next-entry">Next: ${esc(next.label)} →</button>` : '<button class="button" id="review-all">Review the presentation →</button>'}</div>`;
+    `<header class="room-intro"><span class="eyebrow">ROOM ${r.number} · EXHIBITION STUDIO</span><h1>${esc(r.title)}</h1><p>${esc(r.summary)}</p><div class="reading"><span>Reading</span>${esc(r.reading)}</div><details class="chronology-guide"><summary>Reading order &amp; connection</summary><p>${esc(r.chronology)}</p><p>${esc(r.bridge)}</p></details></header><article class="entry-card"><div class="entry-heading"><div><h2>${esc(card.label)}</h2><p>${esc(card.guide)}</p></div><span class="entry-progress" id="entry-progress"></span></div><form id="entry-form">${entryFieldsHTML(card)}</form></article><details class="composition-preview"><summary>Preview ${esc(r.feature)}</summary><div id="composition-preview"></div></details><div class="entry-bottom"><a href="./#room=${card.room}" target="_blank" rel="noopener">See Room ${r.number} in the museum ↗</a>${next ? `<button class="button" id="next-entry">Next: ${esc(next.label)} →</button>` : '<button class="button" id="review-all">Review the presentation →</button>'}</div>`;
   $("#entry-form").onsubmit = (e) => e.preventDefault();
+  bindFields();
+  if (next) $("#next-entry").onclick = () => select(next.id);
+  else
+    $("#review-all").onclick = () => {
+      showOverview = true;
+      renderKey = "";
+      render();
+    };
+}
+function bindFields() {
   $$("[data-field]").forEach((input) => {
     input.setAttribute("aria-describedby", `help-${input.dataset.field}`);
     input.onfocus = () => {
@@ -205,13 +300,6 @@ function renderEntry() {
     (button) =>
       (button.onclick = () => store.edit(button.dataset.removeImage, "")),
   );
-  if (next) $("#next-entry").onclick = () => select(next.id);
-  else
-    $("#review-all").onclick = () => {
-      showOverview = true;
-      renderKey = "";
-      render();
-    };
 }
 function renderChecklist(values) {
   const pp = progress(values);
@@ -232,14 +320,20 @@ function renderChecklist(values) {
   );
 }
 function hydrateFields(values) {
+  for (const heading of $$("[data-composition-title]"))
+    heading.textContent =
+      (heading.dataset.titlePrefix || "") +
+      getDisplay(heading.dataset.compositionTitle, values).title;
   const card = CARD_BY_ID[selected],
     p = cardProgress(card, values);
-  $("#entry-progress").textContent = p.complete
-    ? "Entry complete"
-    : `${p.completed}/${p.total} fields filled${p.wordIssues.length ? " · check word count" : ""}`;
-  for (const f of card.fields) {
-    const id = `${card.id}.${f.key}`,
-      input = document.getElementById("field-" + id),
+  if ($("#entry-progress"))
+    $("#entry-progress").textContent = p.complete
+      ? "Entry complete"
+      : `${p.completed}/${p.total} fields filled${p.wordIssues.length ? " · check word count" : ""}`;
+  for (const input of $$("[data-field]")) {
+    const id = input.dataset.field,
+      f = FIELD_BY_ID[id],
+      card = CARD_BY_ID[f.card],
       wrap = input.closest(".field"),
       pending = store.pending[id],
       row = store.fields[id];
@@ -317,17 +411,23 @@ function render() {
         (b) => (b.onclick = () => store.recoverDraft(b.dataset.recoverDraft)),
       );
   }
-  const key = showOverview ? "overview" : selected;
+  const key = showOverview
+    ? "overview"
+    : featureEditing
+      ? `feature-${roomOfSelection()}`
+      : selected;
   if (showOverview) {
     renderChecklist(values);
     renderKey = key;
     return;
   }
   if (renderKey !== key) {
-    renderEntry();
+    if (featureEditing) renderFeatureEditor();
+    else renderEntry();
     renderKey = key;
   }
   hydrateFields(values);
+  if (!$("#composition-preview")) return;
   $("#composition-preview").innerHTML = compositionHTML(
     roomOfSelection(),
     values,
@@ -336,6 +436,7 @@ function render() {
     .querySelectorAll("[data-open-entry]")
     .forEach((b) => (b.onclick = () => select(b.dataset.openEntry)));
 }
+$("#edit-feature").onclick = () => editFeature();
 $("#overview-button").onclick = () => {
   showOverview = true;
   renderKey = "";

@@ -22,38 +22,25 @@
     >
       <div class="opening-page">
         <header class="opening-masthead">
-          <div class="opening-brand">
-            <span class="opening-monogram">D</span
-            ><span>Frederick Douglass<br />The Narrative · 1845</span>
-          </div>
-          <a class="opening-studio" href="./editor.html"
-            >Class exhibition studio ↗</a
-          >
+          <span>Frederick Douglass · 1845</span
+          ><span>A literary exhibition</span>
         </header>
         <div class="opening-hero">
-          <div>
+          <div class="opening-copy">
             <p class="opening-kicker">
-              A presentation on Frederick Douglass’s Narrative
+              Narrative of the Life of Frederick Douglass
             </p>
             <h1 class="opening-title">
               <span>The Douglass</span><span>Exhibition</span>
             </h1>
-            <p class="opening-question-label">Our presentation question</p>
             <p class="opening-question"></p>
-            <p class="opening-presenters">
-              Nate Marshall <i>·</i> Layla Decaires<br />Marianna McKenzie
-              <i>·</i> Lucas Maguire
-            </p>
-            <div class="opening-actions">
-              <button id="begin-exhibition" class="opening-begin" disabled>
-                Begin the exhibition <span aria-hidden="true">↗</span></button
-              ><button id="skip-opening" class="opening-skip" disabled>
-                Enter without animation
-              </button>
+            <div class="opening-presenters">
+              <p>Presented by</p>
+              <div>
+                <span>Nate Marshall</span><span>Layla Decaires</span
+                ><span>Marianna McKenzie</span><span>Lucas Maguire</span>
+              </div>
             </div>
-            <p id="opening-status" class="opening-status" role="status">
-              Preparing the museum…
-            </p>
           </div>
           <figure class="opening-illustration">
             <div class="opening-book">
@@ -63,24 +50,31 @@
                 alt="Title page of the 1845 Narrative of the Life of Frederick Douglass, written by himself"
                 width="354"
                 height="563"
-              /><span class="opening-book-label">WRITTEN BY HIMSELF</span>
+              />
             </div>
             <figcaption>
-              Narrative of the Life of Frederick Douglass<br /><a
+              Written by himself<br /><a
                 href="https://commons.wikimedia.org/wiki/File:LifeOfFrederickDouglassCover.jpg"
                 target="_blank"
                 rel="noopener"
-                >Original book · 1845 ↗</a
+                >Original title page · 1845 ↗</a
               >
             </figcaption>
           </figure>
         </div>
-        <footer class="opening-sequence">
-          <div><span>I</span><strong>Control Map</strong></div>
-          <div><span>II</span><strong>Visual Journey</strong></div>
-          <div><span>III</span><strong>Contradiction Wall</strong></div>
-          <div><span>IV</span><strong>Identity Archive</strong></div>
-          <div><span>V</span><strong>Curator’s Statement</strong></div>
+        <footer class="opening-footer">
+          <div class="opening-actions">
+            <button id="begin-exhibition" class="opening-begin" disabled>
+              Start presentation <span aria-hidden="true">↗</span></button
+            ><button id="explore-exhibition" class="opening-explore" disabled>
+              Explore full museum</button
+            ><button id="skip-opening" class="opening-skip" disabled>
+              Present without animation
+            </button>
+          </div>
+          <p id="opening-status" class="opening-status" role="status">
+            Preparing the museum…
+          </p>
         </footer>
       </div>
     </section>
@@ -108,7 +102,9 @@
         >
           Aa
         </button>
-        <a class="studio-link" href="./editor.html"
+        <button id="switch-presentation" class="studio-link" type="button">
+          Presentation mode</button
+        ><a class="studio-link" href="./editor.html"
           >Exhibition studio <span>↗</span></a
         >
         <button
@@ -156,6 +152,33 @@
       </div>
     </div>
     <div id="hotspots"></div>
+    <div id="room-features" aria-label="Features inside this room"></div>
+    <section
+      id="presentation-controls"
+      aria-label="Presentation controls"
+      hidden
+    >
+      <div class="presentation-top">
+        <span>THE DOUGLASS EXHIBITION</span>
+        <div>
+          <button id="presentation-fullscreen">Fullscreen</button
+          ><button id="exit-presentation">Exit presentation</button>
+        </div>
+      </div>
+      <nav class="presentation-nav" aria-label="Presentation rooms">
+        <button id="presentation-prev" aria-label="Previous presentation room">
+          ← Previous
+        </button>
+        <div>
+          <span id="presentation-counter">ROOM I / V</span
+          ><strong id="presentation-room-name">Control Map</strong>
+        </div>
+        <button id="presentation-feature">Open Control Map</button
+        ><button id="presentation-next" aria-label="Next presentation room">
+          Next room →
+        </button>
+      </nav>
+    </section>
     <div id="reticle" aria-hidden="true"></div>
     <div id="arrival" aria-hidden="true"><i></i><span></span><i></i></div>
     <div id="entry">

@@ -1,0 +1,402 @@
+#room-features {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9;
+}
+.room-feature-hotspot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+  border: 1px solid #d5bf85;
+  background: #213c2ef5;
+  color: #fcf6df;
+  border-radius: 7px;
+  padding: 12px 17px;
+  box-shadow: 0 6px 24px #0005;
+  cursor: pointer;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.room-feature-hotspot::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  width: 13px;
+  height: 13px;
+  transform: translateX(-50%) rotate(45deg);
+  background: #213c2e;
+  border-right: 1px solid #d5bf85;
+  border-bottom: 1px solid #d5bf85;
+}
+.room-feature-hotspot svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+}
+.room-feature-hotspot:hover,
+.room-feature-hotspot:focus-visible {
+  background: #355b40;
+  outline: 2px solid #e9d69f;
+  outline-offset: 4px;
+}
+#presentation-controls {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 15;
+}
+.presentation-top {
+  position: absolute;
+  top: 24px;
+  left: 30px;
+  right: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  color: #fffbea;
+  text-shadow: 0 2px 8px #0008;
+  font-size: 12px;
+  letter-spacing: 0.09em;
+}
+.presentation-top > div {
+  display: flex;
+  gap: 10px;
+}
+.presentation-top button {
+  pointer-events: auto;
+  background: #23392be6;
+  border: 1px solid #9f9c78;
+  color: #fff9e5;
+  padding: 10px 14px;
+  border-radius: 5px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.presentation-nav {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  pointer-events: auto;
+  max-width: calc(100vw - 40px);
+  padding: 16px 22px;
+  background: #f6f1e5f5;
+  box-shadow: 0 8px 25px #0003;
+  border: 1px solid #b3aa85;
+  border-radius: 8px;
+  color: #243c2c;
+}
+.presentation-nav > div {
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.presentation-nav strong {
+  font:
+    23px/1.15 "Cormorant Garamond",
+    Georgia,
+    serif;
+  white-space: nowrap;
+  font-weight: 600;
+}
+#presentation-counter {
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  color: #74784f;
+}
+.presentation-nav button {
+  font-size: 13px;
+  background: transparent;
+  border: 0;
+  color: #28452f;
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 10px;
+}
+.presentation-nav #presentation-feature {
+  background: #294c36;
+  color: white;
+  border-radius: 5px;
+  padding: 13px 16px;
+}
+.presentation-nav button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.presentation-mode #topbar,
+.presentation-mode #corner-navigation,
+.presentation-mode #navigation,
+.presentation-mode #modes,
+.presentation-mode #arrival,
+.presentation-mode #entry,
+.presentation-mode #hotspots {
+  display: none !important;
+}
+.presentation-mode .display-guidance,
+.presentation-mode .display-edit {
+  display: none;
+}
+.presentation-mode .room-feature-hotspot {
+  font-size: 17px;
+  padding: 15px 20px;
+}
+.feature-reader-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  justify-content: flex-end;
+  padding: 10px 45px 10px 25px;
+}
+.feature-reader-actions a,
+.feature-reader-actions button {
+  font-size: 13px;
+  color: #35573a;
+  cursor: pointer;
+}
+.feature-reader-actions button {
+  border: 1px solid #6c7858;
+  background: transparent;
+  border-radius: 4px;
+  padding: 10px 14px;
+}
+#room-reader.presentation-view {
+  width: min(1400px, 96vw);
+  max-height: 93vh;
+  padding: 35px 20px 20px;
+  background: #f2eee1;
+}
+.presentation-pages {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  border-bottom: 1px solid #b8b79f;
+  padding: 8px 18px 19px;
+  margin-right: 40px;
+  color: #365038;
+}
+.presentation-pages button {
+  background: transparent;
+  border: 1px solid #8c9475;
+  border-radius: 4px;
+  color: #304b33;
+  padding: 10px 15px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.presentation-pages > span {
+  font-size: 13px;
+}
+#room-reader.presentation-view .composition-heading {
+  margin-bottom: 28px;
+}
+#room-reader.presentation-view .composition-heading h2 {
+  font-size: clamp(38px, 4.5vw, 67px);
+}
+#room-reader.presentation-view .composition-heading p {
+  font-size: 20px;
+}
+#room-reader.presentation-view .composition-card p,
+#room-reader.presentation-view .contradiction-pair p {
+  font-size: 19px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+#room-reader.presentation-view .composition-card h3 {
+  font-size: 27px;
+}
+#room-reader.presentation-view .room-composition blockquote {
+  font-size: 22px;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+#room-reader.presentation-view .room-composition button {
+  font-size: 15px;
+}
+#room-reader.presentation-view .composition-card h4 {
+  font-size: 12px;
+}
+.presentation-entry {
+  padding: clamp(20px, 4vw, 60px);
+  color: #243c2e;
+}
+#room-reader.presentation-view .presentation-eyebrow {
+  font-size: 13px;
+  letter-spacing: 0.13em;
+  color: #77734f;
+}
+#room-reader.presentation-view .presentation-entry h1 {
+  font:
+    500 clamp(34px, 4.4vw, 66px)/1.1 "Cormorant Garamond",
+    Georgia,
+    serif;
+  margin: 15px 0 28px;
+}
+.presentation-entry-body {
+  display: grid;
+  gap: 35px;
+}
+.presentation-entry.has-image .presentation-entry-body {
+  grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.4fr);
+}
+.presentation-entry figure {
+  margin: 0;
+}
+.presentation-entry figure img {
+  width: 100%;
+  max-height: 55vh;
+  object-fit: contain;
+  background: #e2ddcc;
+}
+.presentation-entry figcaption {
+  font-size: 16px;
+  line-height: 1.5;
+  margin-top: 14px;
+  white-space: pre-wrap;
+}
+.presentation-entry small,
+.presentation-entry cite {
+  display: block;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #6d735d;
+  margin-top: 12px;
+}
+#room-reader.presentation-view .presentation-writing section p {
+  font-size: clamp(21px, 2vw, 29px);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 10px 0 25px;
+}
+.presentation-writing section h2 {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6a6c4e;
+  margin-top: 28px;
+}
+.presentation-writing blockquote {
+  font:
+    italic clamp(25px, 2.3vw, 35px)/1.5 "Cormorant Garamond",
+    Georgia,
+    serif;
+  border-left: 3px solid #aa955c;
+  margin: 0 0 30px;
+  padding-left: 25px;
+  white-space: pre-wrap;
+}
+#room-reader.presentation-view .presentation-source {
+  font-size: 14px;
+  color: #656d53;
+}
+@media (max-width: 700px) {
+  .room-feature-hotspot,
+  .presentation-mode .room-feature-hotspot {
+    font-size: 12px;
+    padding: 10px 12px;
+    gap: 7px;
+  }
+  .room-feature-hotspot svg {
+    width: 20px;
+    height: 20px;
+  }
+  .presentation-top {
+    top: 18px;
+    left: 16px;
+    right: 16px;
+  }
+  .presentation-top > span {
+    display: none;
+  }
+  .presentation-top > div {
+    margin-left: auto;
+  }
+  .presentation-nav {
+    bottom: 16px;
+    padding: 12px;
+    gap: 6px;
+    flex-wrap: wrap;
+    width: calc(100vw - 30px);
+    max-width: none;
+    justify-content: space-between;
+  }
+  .presentation-nav > div {
+    min-width: 0;
+    flex: 1;
+  }
+  .presentation-nav strong {
+    font-size: 20px;
+  }
+  .presentation-nav button {
+    font-size: 11px;
+    padding: 8px;
+  }
+  .presentation-nav #presentation-feature {
+    order: 4;
+    width: 100%;
+    padding: 10px;
+  }
+  .presentation-pages {
+    margin-right: 10px;
+    padding: 10px 0;
+    gap: 8px;
+  }
+  .presentation-pages button {
+    padding: 8px;
+    font-size: 12px;
+  }
+  .presentation-pages > span {
+    font-size: 11px;
+  }
+  #room-reader.presentation-view {
+    padding: 33px 10px 10px;
+  }
+  .presentation-entry {
+    padding: 22px 10px;
+  }
+  .presentation-entry.has-image .presentation-entry-body {
+    grid-template-columns: 1fr;
+  }
+  .presentation-entry figure img {
+    max-height: 35vh;
+  }
+  #room-reader.presentation-view .control-map {
+    display: flex;
+    flex-direction: column;
+  }
+  .feature-reader-actions {
+    justify-content: flex-start;
+    padding: 12px;
+    gap: 10px;
+  }
+  .feature-reader-actions a,
+  .feature-reader-actions button {
+    font-size: 12px;
+  }
+  #switch-presentation {
+    font-size: 10px;
+    padding: 8px;
+  }
+}
+.ui-hidden #room-features {
+  display: none;
+}

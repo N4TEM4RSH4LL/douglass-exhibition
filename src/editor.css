@@ -815,3 +815,133 @@ dialog label span {
   height: 16px;
   margin: 0;
 }
+.previous-event-fields {
+  margin-top: 24px;
+  border-top: 1px solid #d5d3c9;
+  padding-top: 18px;
+}
+.previous-event-fields > summary,
+.chronology-guide > summary {
+  cursor: pointer;
+  color: #465b45;
+  font-size: 14px;
+  font-weight: 600;
+}
+.previous-event-fields[open] > summary {
+  margin-bottom: 20px;
+}
+.feature-edit-button {
+  width: 100%;
+  border: 1px solid #687655;
+  background: #e4e9db;
+  border-radius: 5px;
+  color: #263f30;
+  padding: 15px 12px;
+  font-size: 14px;
+  margin: 15px 0;
+  cursor: pointer;
+  text-align: left;
+}
+.feature-edit-button.active {
+  background: #294536;
+  color: #fff;
+}
+.feature-editor-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+.composition-editable {
+  padding: 20px 10px;
+}
+.composition-editable .composition-card {
+  padding: 20px;
+}
+.composition-editable .field {
+  margin: 18px 0;
+}
+.composition-editable .field-label-row {
+  display: block;
+}
+.composition-editable .field-state {
+  display: block;
+  margin-top: 4px;
+}
+.composition-editable .field-help {
+  font-size: 12px;
+}
+.composition-editable textarea {
+  min-height: 125px;
+}
+.composition-editable .field-tools {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.composition-editable .control-map {
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 0.8fr) minmax(0, 1fr);
+  gap: 15px;
+}
+.composition-editable .control-centre {
+  padding: 12px;
+  background: #e4e1cf;
+  border: 1px solid #bdbca7;
+  width: 100%;
+}
+.composition-editable .control-centre .field {
+  text-align: left;
+}
+.composition-editable .control-centre > span {
+  aspect-ratio: auto;
+  border-radius: 25px;
+}
+.composition-image-fields {
+  margin: 18px 0;
+  border-top: 1px solid #c7c7b6;
+  padding-top: 12px;
+}
+.composition-image-fields summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: #3c583e;
+}
+@media (max-width: 1100px) {
+  .composition-editable .control-map {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+  }
+  .composition-editable .control-centre {
+    grid-column: 1/-1;
+    grid-row: 1;
+    max-width: 100%;
+  }
+  .composition-editable .control-map > .composition-card:nth-child(2) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .composition-editable .control-map > .composition-card:nth-child(3) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .composition-editable .control-map > .composition-card:nth-child(4) {
+    grid-column: 1;
+    grid-row: 3;
+  }
+  .composition-editable .control-map > .composition-card:nth-child(5) {
+    grid-column: 2;
+    grid-row: 3;
+  }
+}
+@media (max-width: 650px) {
+  .composition-editable .control-map {
+    display: flex;
+    flex-direction: column;
+  }
+  .composition-editable .contradiction-columns {
+    display: block;
+  }
+  .composition-editable .contradiction-columns section + section {
+    padding: 0;
+    border: 0;
+  }
+}
