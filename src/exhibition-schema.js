@@ -213,9 +213,14 @@ for (let i = 1; i <= 5; i++)
   add(
     `r2-stage-${i}`,
     2,
-    `Journey event ${i}`,
-    "Use the second half of Chapter 10 and Chapter 11. Put the five events in order; answer the three questions below for each event, then label the freedom E, I or both. Explain how its artifact supports the event.",
+    `Event ${i}`,
+    "Choose one event from the second half of Chapter 10 or Chapter 11. Keep Events 1–5 in chronological order. In the single analysis box, explain what happens, what changes for Douglass, how he presents the change, and whether the freedom is internal (I), external (E), or both. Connect the symbolic artifact when relevant.",
     [
+      f(
+        "analysis",
+        `Analysis for Event ${i}`,
+        "In one connected response: identify the event and chapter, explain what happens and what changes for Douglass, analyse how his language or storytelling presents it, and say whether the freedom is internal (I), external (E), or both. Add a short quotation and source reference if useful.",
+      ),
       title(),
       f(
         "happens",
@@ -251,6 +256,11 @@ for (let i = 1; i <= 5; i++)
       meaning(),
     ],
   );
+// Earlier detailed responses remain available in the optional disclosure and
+// in saved history. Completion now requires only the consolidated analysis.
+for (const card of cards.filter((c) => /^r2-stage-\d$/.test(c.id)))
+  for (const field of card.fields)
+    if (field.key !== "analysis") field.required = false;
 add(
   "r2-internal-freedom",
   2,
@@ -590,7 +600,8 @@ export function getDisplay(id, values) {
     source: v.source,
     primary: binding.field
       ? v[binding.field]
-      : v.effect ||
+      : (card.room === 2 && card.id.startsWith("r2-stage-") && v.analysis) ||
+        v.effect ||
         v.happens ||
         v.analysis ||
         v.statement ||

@@ -790,3 +790,5 @@ dialog label span {
     scroll-behavior: auto !important;
   }
 }
+.previous-event-fields { margin-top: 18px; border-top: 1px solid #d5d3c9; padding-top: 15px; }
+.previous-event-fields summary { cursor: pointer; color: #667361; font-size: 12px; }
