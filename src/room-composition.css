@@ -1,0 +1,366 @@
+.room-composition {
+  color: #2f4036;
+  background: #ede8db;
+  padding: clamp(18px, 4vw, 45px);
+  font:
+    14px/1.65 Arial,
+    sans-serif;
+  border-radius: 5px;
+}
+.composition-heading {
+  text-align: center;
+  margin: 0 auto 32px;
+  max-width: 720px;
+}
+.composition-heading > span {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: #867447;
+}
+.composition-heading h2 {
+  font:
+    clamp(32px, 5vw, 58px)/1.1 Georgia,
+    serif;
+  margin: 10px 0;
+}
+.composition-heading p {
+  margin: 9px 0;
+}
+.composition-order {
+  color: #687360;
+  font-size: 12px;
+}
+.composition-card,
+.contradiction-pair {
+  background: #faf7ee;
+  border: 1px solid #c5c3ad;
+  padding: 22px;
+  min-width: 0;
+  position: relative;
+  overflow-wrap: anywhere;
+}
+.composition-card h3,
+.contradiction-pair > h3 {
+  font:
+    22px/1.25 Georgia,
+    serif;
+  margin: 6px 0 18px;
+}
+.composition-card h4,
+.contradiction-pair h4 {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.055em;
+  color: #7d6947;
+  margin: 18px 0 5px;
+}
+.composition-card p,
+.contradiction-pair p {
+  white-space: pre-wrap;
+  margin: 6px 0;
+}
+.composition-empty {
+  color: #929380;
+  font-size: 12px;
+  font-style: italic;
+}
+.composition-number {
+  font-size: 11px;
+  color: #8a714b;
+}
+.room-composition blockquote {
+  margin: 18px 0;
+  border-left: 2px solid #ae965b;
+  padding-left: 14px;
+  font:
+    italic 18px/1.6 Georgia,
+    serif;
+  white-space: pre-wrap;
+}
+.room-composition cite {
+  display: block;
+  font:
+    10px/1.6 Arial,
+    sans-serif;
+  margin-top: 8px;
+  color: #7d806c;
+}
+.room-composition button {
+  background: none;
+  border: 0;
+  border-bottom: 1px solid #9d9f84;
+  color: #4c6553;
+  font-size: 11px;
+  padding: 8px 0;
+  margin-top: 12px;
+  cursor: pointer;
+}
+.composition-photo {
+  margin: 15px 0;
+}
+.composition-photo img {
+  width: 100%;
+  max-height: 260px;
+  object-fit: contain;
+  display: block;
+  background: #e3dfd0;
+  border: 1px solid #c9c4b0;
+}
+.composition-photo figcaption {
+  font-size: 11px;
+  margin-top: 9px;
+  white-space: pre-wrap;
+}
+.composition-photo small {
+  display: block;
+  color: #878673;
+  margin-top: 5px;
+}
+.control-map {
+  display: grid;
+  grid-template-columns: 1fr 0.65fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 20px;
+  background:
+    linear-gradient(26deg, transparent 49.8%, #9b9d7955 50%, transparent 50.2%),
+    linear-gradient(-26deg, transparent 49.8%, #9b9d7955 50%, transparent 50.2%);
+}
+.control-centre {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: center;
+  text-align: center;
+  padding: 20px 6px;
+}
+.control-centre > span {
+  font:
+    18px Georgia,
+    serif;
+  border: 1px solid #8a8d72;
+  border-radius: 50%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  background: #e4e1cf;
+}
+.control-centre p {
+  font-size: 12px;
+}
+.control-map > .composition-card:nth-child(2) {
+  grid-column: 1;
+  grid-row: 1;
+}
+.control-map > .composition-card:nth-child(3) {
+  grid-column: 3;
+  grid-row: 1;
+}
+.control-map > .composition-card:nth-child(4) {
+  grid-column: 1;
+  grid-row: 2;
+}
+.control-map > .composition-card:nth-child(5) {
+  grid-column: 3;
+  grid-row: 2;
+}
+.visual-journey {
+  display: grid;
+  gap: 22px;
+  padding-left: 24px;
+  border-left: 2px solid #a99055;
+  margin-left: 5px;
+}
+.visual-journey > .composition-card::before {
+  content: "";
+  position: absolute;
+  left: -32px;
+  top: 29px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #a99055;
+  border: 3px solid #ede8db;
+}
+.freedom-type {
+  position: absolute;
+  right: 20px;
+  top: 18px;
+  font-size: 10px;
+  background: #e1e6d8;
+  padding: 4px 8px;
+}
+.composition-connection,
+.identity-archive,
+.quotation-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  margin: 26px 0;
+}
+.composition-connection > h3 {
+  grid-column: 1/-1;
+  text-align: center;
+  letter-spacing: 0.14em;
+  font-size: 13px;
+}
+.stage-name {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: #93764c;
+}
+.contradiction-wall > header,
+.contradiction-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+.contradiction-wall > header h3 {
+  font-size: 11px;
+  letter-spacing: 0.07em;
+  text-align: center;
+}
+.contradiction-pair {
+  margin-top: 17px;
+}
+.contradiction-columns section + section {
+  border-left: 1px solid #cac3ad;
+  padding-left: 24px;
+}
+.composition-bridge {
+  text-align: center;
+  border-top: 1px solid #b6b49a;
+  padding-top: 20px;
+  font:
+    italic 19px/1.5 Georgia,
+    serif;
+  margin: 30px 0 0;
+}
+.composition-preview {
+  margin: 28px 0;
+}
+.composition-preview > summary {
+  padding: 20px;
+  border: 1px solid #c4c9b8;
+  cursor: pointer;
+  font:
+    22px Georgia,
+    serif;
+  color: #38533e;
+}
+.image-upload img {
+  display: block;
+  max-width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  margin: 10px 0;
+}
+.image-upload input {
+  font-size: 13px;
+  padding: 15px !important;
+}
+.image-upload p {
+  font-size: 12px;
+}
+.image-upload .button {
+  font-size: 11px;
+}
+#feature-room {
+  border: 1px solid #a2926b;
+  background: #243b2eee;
+  color: #f4e9cc;
+  border-radius: 25px;
+  padding: 12px 19px;
+  font-size: 12px;
+  box-shadow: 0 4px 16px #0002;
+}
+#room-reader.composition-view {
+  width: min(1100px, 94vw);
+  padding: 40px 10px 10px;
+  background: #ede8db;
+}
+#room-reader.composition-view #close-room-reader {
+  color: #263a30;
+}
+@media (max-width: 700px) {
+  .control-map {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 12px;
+  }
+  .control-centre {
+    grid-column: 1/-1;
+    grid-row: 1;
+    max-width: 210px;
+    justify-self: center;
+  }
+  .control-centre > span {
+    aspect-ratio: auto;
+    border-radius: 40px;
+    padding: 14px;
+  }
+  .control-map > .composition-card:nth-child(2) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .control-map > .composition-card:nth-child(3) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .control-map > .composition-card:nth-child(4) {
+    grid-column: 1;
+    grid-row: 3;
+  }
+  .control-map > .composition-card:nth-child(5) {
+    grid-column: 2;
+    grid-row: 3;
+  }
+  .composition-card,
+  .contradiction-pair {
+    padding: 15px;
+  }
+  .composition-card h3 {
+    font-size: 18px;
+  }
+  .composition-connection,
+  .identity-archive,
+  .quotation-gallery {
+    grid-template-columns: 1fr;
+  }
+  .contradiction-columns {
+    gap: 12px;
+  }
+  .contradiction-columns section + section {
+    padding-left: 12px;
+  }
+  .control-map .composition-photo img {
+    max-height: 150px;
+  }
+}
+
+.exhibit-image {
+  margin: 20px 0;
+}
+.exhibit-image img,
+.history-image,
+.conflict-image {
+  width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+  background: #dfd8c0;
+}
+.exhibit-image figcaption {
+  white-space: pre-wrap;
+  line-height: 1.5;
+  font-size: 13px;
+}
+.exhibit-image small {
+  display: block;
+  margin-top: 8px;
+  opacity: 0.7;
+}
+#exhibition-caption {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}

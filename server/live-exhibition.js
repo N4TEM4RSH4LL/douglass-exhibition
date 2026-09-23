@@ -2,7 +2,7 @@ import { FIELD_BY_ID } from "../src/exhibition-schema.js";
 const listeners = new Map();
 export async function readSnapshot(sql, exhibition) {
   const rows =
-    await sql`SELECT field_id,value,revision,updated_at AS "updatedAt",writer FROM exhibition_fields WHERE exhibition_id=${exhibition} ORDER BY field_id`;
+    await sql`SELECT f.field_id,f.value,f.revision,f.updated_at AS "updatedAt",f.writer,h.mutation_id AS "mutationId" FROM exhibition_fields f LEFT JOIN exhibition_history h ON h.exhibition_id=f.exhibition_id AND h.field_id=f.field_id AND h.revision=f.revision WHERE f.exhibition_id=${exhibition} ORDER BY f.field_id`;
   const fields = {};
   let updatedAt = null;
   for (const { field_id, ...row } of rows) {

@@ -1,0 +1,442 @@
+#opening-slide {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  outline: none;
+  color: #263a30;
+  overflow: hidden;
+}
+.opening-page {
+  position: absolute;
+  inset: 0;
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 20px;
+  padding: clamp(26px, 3.7vw, 60px);
+  background: #e9e4d5;
+  background-image:
+    radial-gradient(ellipse at 75% 30%, #fbf7eb99, transparent 55%),
+    repeating-linear-gradient(
+      0deg,
+      #675c3910 0,
+      #675c3910 1px,
+      transparent 1px,
+      transparent 4px
+    );
+}
+.opening-page::after {
+  content: "";
+  position: absolute;
+  inset: 17px;
+  border: 1px solid #95866c77;
+  pointer-events: none;
+}
+.opening-masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #64705a;
+}
+.opening-brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.opening-monogram {
+  width: 39px;
+  height: 39px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #78816a;
+  border-radius: 50%;
+  font:
+    26px Georgia,
+    serif;
+  letter-spacing: 0;
+}
+.opening-studio {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid #b3b49e;
+  padding-bottom: 4px;
+}
+.opening-hero {
+  display: grid;
+  grid-template-columns: 1.4fr 0.75fr;
+  align-items: center;
+  gap: 4vw;
+}
+.opening-kicker {
+  color: #5e5136;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+.opening-title {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  font-size: clamp(62px, min(7.9vw, 12.5vh), 132px);
+  line-height: 0.95;
+  margin: 0 0 24px;
+}
+.opening-title span {
+  display: block;
+}
+.opening-title .opening-the {
+  font-size: 0.35em;
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+  margin-bottom: 6px;
+  font-style: italic;
+}
+.opening-question {
+  max-width: 680px;
+  font:
+    500 clamp(22px, 2.05vw, 31px)/1.35 "DM Sans",
+    Arial,
+    sans-serif;
+  color: #263a30;
+  margin: 0 0 22px;
+}
+.opening-question-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #675634;
+  margin: 0 0 8px;
+}
+.opening-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: center;
+}
+.opening-begin {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 30px;
+  padding: 16px 22px;
+  border: 1px solid #2a4236;
+  background: #263d31;
+  color: #f1ead8;
+  border-radius: 2px;
+  font-size: 15px;
+  letter-spacing: 0.015em;
+}
+.opening-begin span {
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 14px;
+}
+.opening-skip {
+  background: none;
+  color: #646c5a;
+  border: 0;
+  padding: 12px 0;
+  font-size: 13px;
+  border-bottom: 1px solid #aeb29e;
+}
+.opening-status {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #58634e;
+  margin: 13px 0 0;
+}
+.opening-illustration {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  margin: 0;
+}
+.opening-illustration svg {
+  width: 100%;
+  height: auto;
+  color: #56634d;
+}
+.opening-illustration figcaption {
+  font:
+    italic 17px/1.4 "Cormorant Garamond",
+    Georgia,
+    serif;
+  text-align: center;
+  color: #777f69;
+  margin-top: 12px;
+}
+.opening-sequence {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+  border-top: 1px solid #96977e88;
+  padding-top: 19px;
+}
+.opening-sequence div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.opening-sequence span {
+  font:
+    11px Georgia,
+    serif;
+  color: #94794f;
+}
+.opening-sequence strong {
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+.opening-fractures {
+  position: absolute;
+  inset: 0;
+  perspective: 1100px;
+  pointer-events: none;
+}
+.opening-shard {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+.opening-cracks {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: #62543b;
+  stroke-width: 1;
+  pointer-events: none;
+}
+.opening-active #loading {
+  visibility: hidden;
+}
+.opening-active #topbar,
+.opening-active #corner-navigation,
+.opening-active #entry,
+.opening-active #navigation,
+.opening-active #modes {
+  opacity: 0;
+  pointer-events: none;
+}
+#replay-opening {
+  font:
+    14px Georgia,
+    serif;
+}
+@media (max-width: 700px) {
+  .opening-page {
+    padding: 29px 30px;
+    gap: 15px;
+  }
+  .opening-hero {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .opening-illustration {
+    display: none;
+  }
+  .opening-masthead {
+    font-size: 8px;
+    letter-spacing: 0.12em;
+  }
+  .opening-title {
+    font-size: clamp(42px, 10.8vw, 74px);
+    margin-bottom: 22px;
+  }
+  .opening-kicker {
+    font-size: 9px;
+    margin-bottom: 18px;
+  }
+  .opening-question {
+    font-size: 21px;
+  }
+  .opening-sequence {
+    gap: 12px;
+    padding-top: 14px;
+  }
+  .opening-sequence strong {
+    font-size: 8px;
+    line-height: 1.5;
+  }
+  .opening-actions {
+    gap: 14px;
+  }
+  .opening-begin {
+    padding: 14px 16px;
+    gap: 18px;
+  }
+  .opening-skip {
+    font-size: 10px;
+  }
+  .opening-status {
+    font-size: 9px;
+  }
+}
+@media (max-height: 620px) and (min-width: 701px) {
+  .opening-page {
+    padding: 27px 42px;
+    gap: 12px;
+  }
+  .opening-title {
+    font-size: 72px;
+    margin-bottom: 15px;
+  }
+  .opening-question {
+    font-size: 18px;
+    margin-bottom: 17px;
+  }
+  .opening-kicker {
+    margin-bottom: 12px;
+  }
+  .opening-sequence {
+    padding-top: 12px;
+  }
+  .opening-illustration svg {
+    max-height: 260px;
+  }
+}
+@media (max-height: 600px) and (max-width: 700px) {
+  .opening-page {
+    overflow-y: auto;
+  }
+  .opening-title {
+    font-size: 51px;
+  }
+  .opening-question {
+    font-size: 16px;
+  }
+  .opening-sequence {
+    display: none;
+  }
+}
+
+.opening-presenters {
+  font-size: clamp(17px, 1.6vw, 22px);
+  font-weight: 500;
+  line-height: 1.7;
+  color: #263a30;
+  margin: 0 0 23px;
+  letter-spacing: 0.02em;
+}
+.opening-presenters i {
+  font-style: normal;
+  color: #a18a5d;
+  margin: 0 7px;
+}
+.opening-book {
+  position: relative;
+  max-width: 290px;
+  width: 85%;
+  margin: 0 auto;
+  transform: rotate(5deg);
+  background: #342e22;
+  padding: 12px 9px 12px 18px;
+  border-radius: 3px 6px 6px 3px;
+  box-shadow:
+    9px 14px 0 -8px #a39c84,
+    13px 20px 0 -10px #c1b9a1,
+    20px 28px 45px #3c3b2830;
+}
+.opening-book::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid #8c7455;
+}
+.opening-book-page {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 43vh;
+  object-fit: contain;
+  filter: sepia(0.13);
+}
+.opening-book-label {
+  position: absolute;
+  left: -30px;
+  bottom: 38px;
+  transform: rotate(-10deg);
+  background: #2b4436;
+  color: #eee8d6;
+  padding: 13px 22px;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  box-shadow: 0 5px 14px #29352422;
+}
+.opening-illustration figcaption {
+  margin-top: 34px;
+  font-size: 15px;
+}
+.opening-illustration a {
+  color: inherit;
+  font:
+    9px Arial,
+    sans-serif;
+  text-decoration: none;
+  letter-spacing: 0.04em;
+}
+@media (max-height: 620px) and (min-width: 701px) {
+  .opening-title {
+    font-size: 64px;
+  }
+  .opening-presenters {
+    margin-bottom: 12px;
+  }
+  .opening-question {
+    margin-bottom: 12px;
+  }
+}
+
+@media (max-width: 700px) {
+  .opening-presenters {
+    font-size: 16px;
+    line-height: 1.75;
+  }
+  .opening-kicker {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+  .opening-question-label {
+    font-size: 10px;
+  }
+  .opening-sequence strong {
+    font-size: 10px;
+  }
+  .opening-page {
+    overflow-y: auto;
+  }
+}
+@media (max-height: 620px) and (min-width: 701px) {
+  .opening-question {
+    font-size: 21px;
+  }
+  .opening-presenters {
+    font-size: 17px;
+  }
+  .opening-title {
+    font-size: 62px;
+    margin-bottom: 15px;
+  }
+  .opening-page {
+    gap: 12px;
+    overflow-y: auto;
+  }
+  .opening-book-page {
+    max-height: 36vh;
+  }
+}

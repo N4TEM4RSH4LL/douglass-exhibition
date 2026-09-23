@@ -790,3 +790,28 @@ dialog label span {
     scroll-behavior: auto !important;
   }
 }
+
+.chronology-guide {
+  margin-top: 22px;
+  padding: 18px 21px;
+  border-left: 2px solid #a28a53;
+  background: #ebe8dc;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.chronology-guide p {
+  margin: 7px 0 0;
+  max-width: 78ch;
+  font-size: inherit;
+}
+.key-visibility {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.key-visibility input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}

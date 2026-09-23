@@ -1,3 +1,4 @@
+import { mediaURL } from "./exhibition-media.js";
 import * as THREE from "three";
 import { SharedExhibition } from "./shared-store.js";
 import {
@@ -36,6 +37,7 @@ function lines(ctx, text, width, max) {
   }
   return out;
 }
+const imageCache = new Map();
 function screenTexture(display, data) {
   const c = document.createElement("canvas");
   c.width = 1024;
@@ -58,7 +60,7 @@ function screenTexture(display, data) {
   ctx.fillStyle = "#77623b";
   ctx.font = `500 ${small}px Arial`;
   ctx.fillText(
-    `ROOM ${ROOMS[data.card.room - 1].number}  /  THE DOUGLASS EXHIBITION`,
+    `ROOM ${ROOMS[data.card.room - 1].number}  /  ${ROOMS[data.card.room - 1].feature.toUpperCase()}`,
     pad,
     y,
   );
@@ -76,6 +78,18 @@ function screenTexture(display, data) {
   ctx.lineTo(w - pad, y);
   ctx.stroke();
   y += 24 * scale;
+  const image = imageCache.get(data.values.image);
+  if (image?.complete && image.naturalWidth) {
+    const area = Math.max(65 * scale, Math.min(h * 0.42, h - y - 120 * scale));
+    const ratio = Math.min(
+      (w - pad * 2) / image.naturalWidth,
+      area / image.naturalHeight,
+    );
+    const iw = image.naturalWidth * ratio,
+      ih = image.naturalHeight * ratio;
+    ctx.drawImage(image, (w - iw) / 2, y, iw, ih);
+    y += ih + 22 * scale;
+  }
   const quoteShown = !!data.quote && !data.binding.field;
   const content = data.binding.field
     ? data.primary || data.quote
@@ -124,21 +138,43 @@ export function connectExhibition(world) {
       .querySelector("#artifact-panel")
       .setAttribute("aria-label", data.title);
     document.querySelector("#display-content").innerHTML =
-      `<span class="display-eyebrow">ROOM ${r.number} · ${esc(r.title)}</span><h1>${esc(data.title)}</h1>${!data.hasContent ? '<p class="display-empty">This exhibit is ready for your class contribution.</p>' : ""}${card.fields
-        .filter((f) => f.key !== "title" && data.values[f.key])
+      `<span class="display-eyebrow">ROOM ${r.number} · ${esc(r.title)}</span><h1>${esc(data.title)}</h1>${!data.hasContent ? '<p class="display-empty">This exhibit is ready for your class contribution.</p>' : ""}${mediaURL(data.values.image) ? `<figure class="exhibit-image"><img src="${mediaURL(data.values.image)}" alt="${esc(data.values.imageCaption || card.label)}"><figcaption>${esc(data.values.imageCaption)}<small>${esc(data.values.imageCredit)}</small></figcaption></figure>` : ""}${card.fields
+        .filter(
+          (f) =>
+            !["title", "image", "imageCaption", "imageCredit"].includes(
+              f.key,
+            ) && data.values[f.key],
+        )
         .map(
           (f) =>
             `<section class="display-section"><h2>${esc(f.label)}</h2>${f.key === "quote" ? `<blockquote>${esc(data.values[f.key])}</blockquote>` : `<p>${esc(f.options?.find(([v]) => v === data.values[f.key])?.[1] || data.values[f.key])}</p>`}</section>`,
         )
         .join(
           "",
-        )}<details class="display-guidance"><summary>What belongs in this exhibit</summary><p>${esc(card.guide)}</p><ul>${card.fields.map((f) => `<li><strong>${esc(f.label)}:</strong> ${esc(f.help)}</li>`).join("")}</ul></details><a class="display-edit" href="./editor.html#card=${card.id}" target="_blank" rel="noopener">Contribute to this exhibit ↗</a>`;
+        )}<details class="display-guidance"><summary>What belongs in this exhibit</summary><p><strong>Assigned reading:</strong> ${esc(r.reading)}</p><p>${esc(card.guide)}</p><p><strong>Sequence:</strong> ${esc(r.chronology)}</p><ul>${card.fields.map((f) => `<li><strong>${esc(f.label)}:</strong> ${esc(f.help)}</li>`).join("")}</ul></details><a class="display-edit" href="./editor.html#card=${card.id}" target="_blank" rel="noopener">Contribute to this exhibit ↗</a>`;
   }
   store.subscribe(() => {
     const values = store.values();
     for (const display of world.displays) {
       const data = getDisplay(display.id, values);
       if (!data) continue;
+      const imageRef = data.values.image;
+      if (mediaURL(imageRef) && !imageCache.has(imageRef)) {
+        const image = new Image();
+        imageCache.set(imageRef, image);
+        image.crossOrigin = "anonymous";
+        image.onload = () => {
+          for (const d of world.displays) {
+            const latest = getDisplay(d.id, store.values());
+            if (latest?.values.image === imageRef) {
+              d.material.map?.dispose();
+              d.material.map = screenTexture(d, latest);
+              d.material.needsUpdate = true;
+            }
+          }
+        };
+        image.src = mediaURL(imageRef);
+      }
       const key = JSON.stringify(data.values);
       if (cache.get(display.id) === key) continue;
       cache.set(display.id, key);

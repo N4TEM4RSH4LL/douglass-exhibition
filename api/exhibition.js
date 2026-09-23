@@ -1,13 +1,14 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { neon } from "@neondatabase/serverless";
 import { FIELD_BY_ID } from "../src/exhibition-schema.js";
+import { extractAccessKey, normalizeClassCode } from "../src/class-access.js";
 import {
   readSnapshot,
   streamExhibition,
   publishSave,
 } from "../server/live-exhibition.js";
 
-const originAllowed = (origin) =>
+export const originAllowed = (origin) =>
   !origin ||
   (process.env.VERCEL_URL && origin === `https://${process.env.VERCEL_URL}`) ||
   [
@@ -16,34 +17,37 @@ const originAllowed = (origin) =>
     "http://localhost:5173",
     "http://127.0.0.1:5173",
   ].includes(origin);
-function authorized(req) {
-  const hash = process.env.EDITOR_SECRET_HASH;
+export function authorized(req) {
   const header = req.headers.authorization || "";
-  if (
-    !hash ||
-    !/^[a-f0-9]{64}$/.test(hash) ||
-    !header.startsWith("Bearer ") ||
-    header.length > 500
-  )
-    return false;
-  const provided = createHash("sha256").update(header.slice(7)).digest();
-  return timingSafeEqual(provided, Buffer.from(hash, "hex"));
+  if (!header.startsWith("Bearer ") || header.length > 500) return false;
+  const key = extractAccessKey(header.slice(7));
+  if (!key) return false;
+  const matches = (value, hash) =>
+    /^[a-f0-9]{64}$/i.test(hash || "") &&
+    timingSafeEqual(
+      createHash("sha256").update(value).digest(),
+      Buffer.from(hash, "hex"),
+    );
+  return (
+    matches(key, process.env.EDITOR_SECRET_HASH) ||
+    matches(normalizeClassCode(key), process.env.EDITOR_CLASS_KEY_HASH)
+  );
 }
-async function bodyOf(req) {
+export async function bodyOf(req, limit = 20000) {
   if (req.body !== undefined) {
     if (typeof req.body === "string") {
-      if (Buffer.byteLength(req.body) > 20000)
+      if (Buffer.byteLength(req.body) > limit)
         throw new Error("Request too large");
       return JSON.parse(req.body);
     }
-    if (Buffer.byteLength(JSON.stringify(req.body)) > 20000)
+    if (Buffer.byteLength(JSON.stringify(req.body)) > limit)
       throw new Error("Request too large");
     return req.body;
   }
   let raw = "";
   for await (const chunk of req) {
     raw += chunk;
-    if (Buffer.byteLength(raw) > 20000) throw new Error("Request too large");
+    if (Buffer.byteLength(raw) > limit) throw new Error("Request too large");
   }
   return JSON.parse(raw || "{}");
 }
@@ -127,7 +131,8 @@ export default async function handler(req, res) {
       !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
         mutationId,
       ) ||
-      (def.options && value && !def.options.some(([v]) => v === value))
+      (def.options && value && !def.options.some(([v]) => v === value)) ||
+      (def.type === "image" && value && !/^media:[a-f0-9]{64}$/.test(value))
     )
       return respond(400, {
         error: "A field value or revision was invalid. Your draft is retained.",

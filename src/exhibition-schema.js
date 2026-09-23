@@ -1,12 +1,18 @@
 /** The assignment structure is shared by the editor, API validation and 3D displays. */
 export const QUESTION =
   "How does Douglass move from having his life controlled by others to controlling his own story?";
+export const ASSIGNMENT_NOTE =
+  "The exhibition follows the five rooms in Exhibition.docx. Rooms I–II follow resistance towards freedom; Room III revisits religious hypocrisy; Room IV retraces the whole life in six ordered stages; Room V brings the argument together. The thematic rooms are not five consecutive periods of his life.";
 export const ROOMS = [
   {
     id: 1,
     number: "I",
     title: "The man they tried to control",
     reading: "First half of Chapter 10",
+    chronology:
+      "Start with the conditions under Covey, then the confrontation, then the change in Douglass. The four Control Map panels show simultaneous pressures, not four successive events.",
+    bridge:
+      "Next: explain how resistance develops into greater agency and the journey towards freedom.",
     summary:
       "Put Douglass at the centre of a Control Map. Show what controls him, explain the confrontation with Covey, and trace the change from CONTROL → RESISTANCE.",
     requirements: [
@@ -20,6 +26,10 @@ export const ROOMS = [
     number: "II",
     title: "The road to freedom",
     reading: "Second half of Chapter 10 and Chapter 11",
+    chronology:
+      "Arrange the five chosen events from earliest to latest. Follow Chapter 10 into Chapter 11 and distinguish an attempted escape from a successful escape. Do not treat the fight with Covey as physical freedom.",
+    bridge:
+      "Next: return to Chapters 9–10 and the Appendix to examine the religious hypocrisy within the system he resists.",
     summary:
       "Create a visual journey through at least five important events. For every event, explain what happens, what changes for Douglass, and how he presents the change.",
     requirements: [
@@ -35,6 +45,10 @@ export const ROOMS = [
     number: "III",
     title: "Religion & hypocrisy",
     reading: "Chapters 9–10 and the Appendix",
+    chronology:
+      "This is a thematic return to earlier episodes, not an event after escape. Keep each claim beside the action that contradicts it. The Appendix is Douglass’s later commentary; distinguish it from events he narrates.",
+    bridge:
+      "Next: retrace the whole Narrative through Douglass’s changing identity, from child to author.",
     summary:
       "Build a Contradiction Wall: WHAT RELIGION CLAIMS / WHAT SLAVEHOLDERS ACTUALLY DO. Use at least three examples, identify Douglass’s methods, and turn one example into a museum exhibit.",
     requirements: [
@@ -49,6 +63,10 @@ export const ROOMS = [
     number: "IV",
     title: "The identity archive",
     reading: "Chapter 11 and selected passages from the whole Narrative",
+    chronology:
+      "Keep the six stages in the assigned order: child → witness → learner → resister → freedom seeker → author. Choose events that show that development; distinguish the time of an experience from the later act of writing about it.",
+    bridge:
+      "Next: draw these developments into a curator’s argument about control of his own story.",
     summary:
       "Trace six stages: child, witness, learner, resister, freedom seeker and author. Show how both the person and his self-representation change.",
     requirements: [
@@ -62,6 +80,10 @@ export const ROOMS = [
     number: "V",
     title: "The man who took control of the story",
     reading: "The whole Narrative",
+    chronology:
+      "Refer back across the full journey. Arrange the eight quotations in the order of the experiences or stages they support; identify retrospective commentary rather than assigning it an invented event date.",
+    bridge:
+      "Finish by answering the central question and explaining how the creative feature helps communicate that answer.",
     summary:
       "Bring the rooms into one argument about agency and authorship. Use evidence to support the interpretation, rather than simply decorating the exhibition.",
     requirements: [
@@ -92,14 +114,14 @@ const quote = () =>
   f(
     "quote",
     "Exact quotation",
-    "Copy a short, exact quotation from your own edition of the Narrative. Keep Douglass’s wording and punctuation; do not invent or paraphrase inside quotation marks.",
+    "Use the reading assigned to this room. Copy a short, exact quotation from your edition of the Narrative, keeping Douglass’s wording and punctuation. Check who is speaking and the surrounding context; do not paraphrase inside quotation marks.",
     { maxLength: 1800 },
   );
 const source = () =>
   f(
     "source",
     "Chapter and source reference",
-    "Record the chapter (or Appendix), plus your edition and page number if available. Page numbers differ between editions.",
+    "Record the chapter (or Appendix), then your edition and page if available. Check the event’s place in the Narrative; do not guess a date or use another edition’s page number.",
     { type: "text", maxLength: 240, required: false },
   );
 const method = () =>
@@ -213,14 +235,14 @@ for (let i = 1; i <= 5; i++)
   add(
     `r2-stage-${i}`,
     2,
-    `Journey event ${i}`,
-    "Use the second half of Chapter 10 and Chapter 11. Put the five events in order; answer the three questions below for each event, then label the freedom E, I or both. Explain how its artifact supports the event.",
+    `Journey event ${i}${i === 1 ? " · earliest" : i === 5 ? " · latest" : ""}`,
+    `Event ${i} of 5 in chronological order. Use the second half of Chapter 10 and Chapter 11. ${i === 1 ? "Choose the earliest of your five events after the resistance explored in Room I." : "Choose an event that comes after the previous display’s event."} Answer all three questions, label the freedom E, I or both, and connect the symbolic artifact to that event.`,
     [
       title(),
       f(
         "happens",
         "What happens?",
-        "Identify the event and briefly explain its circumstances.",
+        "Identify the event, its place in the chapter sequence and its circumstances. Include a date only if you can verify it. Keep attempts, setbacks and achievements distinct.",
       ),
       f(
         "changes",
@@ -297,7 +319,7 @@ for (let i = 1; i <= 3; i++)
       f(
         "claim",
         "What religion claims",
-        "Identify the belief, moral claim or religious appearance that Douglass calls into question. Make clear when you are paraphrasing.",
+        "Identify the religious claim or appearance Douglass challenges in Chapters 9–10 or the Appendix. Make clear when you are paraphrasing. Distinguish his criticism of slaveholding religion from his discussion of Christianity itself.",
       ),
       f(
         "action",
@@ -387,7 +409,7 @@ for (let i = 1; i <= 6; i++)
     `r4-stage-${i}`,
     4,
     stages[i - 1],
-    `This stage shows Douglass as ${stages[i - 1].toUpperCase()}. Include one important event, one quotation, one authorial choice and an explanation of how he changes. Connect this stage to the others and explain the symbolic artifact in its display case.`,
+    `Stage ${i} of 6: ${stages[i - 1].toUpperCase()}. ${i === 1 ? "Begin with childhood before the later stages of his development." : `Build from ${stages[i - 2].toLowerCase()} towards ${stages[i - 1].toLowerCase()}.`} Include one important event, one quotation, one authorial choice and an explanation of how he changes. Use Chapter 11 alongside passages from the whole Narrative. Explain how the symbolic artifact supports this stage.`,
     [
       f(
         "title",
@@ -398,7 +420,7 @@ for (let i = 1; i <= 6; i++)
       f(
         "event",
         "One important event",
-        "Choose an event that makes this stage meaningful. Explain enough context for a visitor unfamiliar with the chapter.",
+        "Choose an event that belongs to this stage and fits the sequence before and after it. Locate it in the Narrative. Explain enough context for a visitor unfamiliar with the chapter; do not invent missing dates or escape details.",
       ),
       quote(),
       source(),
@@ -466,7 +488,7 @@ for (let i = 1; i <= 8; i++)
     `r5-quotation-${i}`,
     5,
     `Significant quotation ${i}`,
-    "Choose a significant quotation from across the Narrative. This wall is an evidence bank for the final argument, not a collection of decorative quotations.",
+    `Quotation ${i} of at least 8 across the Narrative. Follow the order of the life stages or experiences you are interpreting, and use this evidence to support the exhibition’s argument. If the passage is later reflection, explain which earlier experience it addresses.`,
     [
       title(),
       quote(),
@@ -502,6 +524,35 @@ add(
     ),
   ],
 );
+export const FEATURE_TITLES = {
+  1: "Control Map",
+  2: "Visual Journey",
+  3: "Contradiction Wall",
+  4: "Identity Archive",
+  5: "Curator’s Statement",
+};
+for (const room of ROOMS) room.feature = FEATURE_TITLES[room.id];
+for (const card of cards)
+  card.fields.push(
+    f(
+      "image",
+      "Image or photograph",
+      "Upload a photograph, a scan from your edition, or your own visual feature for this exact display. It appears in the room composition and on the museum screen. Add the caption and credit below.",
+      { type: "image", required: false, maxLength: 80 },
+    ),
+    f(
+      "imageCaption",
+      "Image caption and connection",
+      "Describe the image for someone who cannot see it, then explain what it contributes to this event, form of control, contradiction or identity stage.",
+      { required: false, maxLength: 1200 },
+    ),
+    f(
+      "imageCredit",
+      "Image source or credit",
+      "Record who made the image and where it comes from, including the edition/page for a book scan. Identify AI-generated artwork as an illustration, not historical evidence.",
+      { required: false, maxLength: 600 },
+    ),
+  );
 export const CARDS = cards;
 export const CARD_BY_ID = Object.fromEntries(cards.map((c) => [c.id, c]));
 export const FIELD_BY_ID = Object.fromEntries(

@@ -9,7 +9,7 @@
     "preview": "vite preview --host 0.0.0.0",
     "dev:api": "node --env-file=.env.local scripts/dev-api.mjs",
     "db:setup": "node --env-file=.env.local scripts/setup-db.mjs",
-    "test": "node tests/navigation.mjs",
+    "test": "node tests/presentation.mjs && node tests/navigation.mjs",
     "test:persistence": "node --env-file=.env.local tests/persistence.mjs"
   },
   "dependencies": {

@@ -1,4 +1,8 @@
 import "./style.css";
+import "./opening-slide.css";
+import "./room-composition.css";
+import { compositionHTML } from "./room-composition.js";
+import { createOpening } from "./opening-slide.js";
 import * as THREE from "three";
 import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
 import {
@@ -64,6 +68,19 @@ for (let i = 1; i <= 5; i++) {
   $("#room-buttons").append(b);
 }
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const initialRoom = Number(
+  new URLSearchParams(location.hash.slice(1)).get("room"),
+);
+const opening = createOpening({
+  reduced,
+  directRoom: initialRoom >= 1 && initialRoom <= 5,
+  onEnter: () => navigate(1),
+  onReplay: () => {
+    stopTour();
+    closeArtifact();
+    navigate(0);
+  },
+});
 const touch = matchMedia("(pointer: coarse)").matches;
 let renderer;
 try {
@@ -205,6 +222,8 @@ function updateUI() {
   $("#entry").hidden = room !== 0 || overview;
   $("#arrival span").textContent = roman[room] || "";
   $("#read-room").hidden = room === 0 || overview;
+  $("#feature-room").hidden = room === 0 || overview;
+  $("#feature-room").textContent = room ? ROOMS[room - 1].feature + " ↗" : "";
   $("#read-room").textContent = room ? `Read Room ${roman[room]} ↗` : "";
   $$("#room-buttons button").forEach((b) => {
     const active = Number(b.dataset.room) === room;
@@ -383,6 +402,7 @@ function walk() {
 $("#walk").onclick = walk;
 const keys = new Set();
 window.addEventListener("keydown", (e) => {
+  if (opening.active) return;
   if ($("#room-reader").open) return;
   if (e.target.closest("input,textarea,select")) return;
   if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key))
@@ -729,7 +749,10 @@ function animate() {
     ),
   );
   composer.render();
-  if (frames === 3) $("#loading").classList.add("done");
+  if (frames === 3) {
+    $("#loading").classList.add("done");
+    opening.setReady();
+  }
   if (frames === 45) renderer.shadowMap.autoUpdate = false;
   // A sustained low frame rate lowers resolution once; users can always override it.
   if (!autoQuality && !lowQuality && frames > 120) {
@@ -756,6 +779,7 @@ function animate() {
   }
 }
 $("#read-room").onclick = () => {
+  $("#room-reader").classList.remove("composition-view");
   stopTour();
   if (document.pointerLockElement) document.exitPointerLock();
   walking = false;
@@ -789,11 +813,36 @@ $("#read-room").onclick = () => {
   }
   $("#room-reader").showModal();
 };
+function renderRoomComposition() {
+  const el = $("#room-reader-content");
+  el.innerHTML = compositionHTML(room, exhibition.store.values());
+  el.querySelectorAll("[data-open-entry]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        $("#room-reader").close();
+        exhibition.show(b.dataset.openEntry);
+        $("#artifact-panel").show();
+      }),
+  );
+}
+$("#feature-room").onclick = () => {
+  stopTour();
+  if (document.pointerLockElement) document.exitPointerLock();
+  walking = false;
+  updateUI();
+  $("#room-reader").classList.add("composition-view");
+  renderRoomComposition();
+  $("#room-reader").showModal();
+};
+exhibition.store.subscribe(() => {
+  if (
+    $("#room-reader").open &&
+    $("#room-reader").classList.contains("composition-view")
+  )
+    renderRoomComposition();
+});
 $("#close-room-reader").onclick = () => $("#room-reader").close();
 updateUI();
 animate();
-const initialRoom = Number(
-  new URLSearchParams(location.hash.slice(1)).get("room"),
-);
 if (initialRoom >= 1 && initialRoom <= 5)
   setTimeout(() => navigate(initialRoom), 600);

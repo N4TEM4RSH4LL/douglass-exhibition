@@ -4,11 +4,14 @@ An explorable 3D museum with five connected galleries, set inside an interpretiv
 
 ## Experience
 
+- A readable presentation opening names Nate Marshall, Layla Decaires, Marianna McKenzie and Lucas Maguire. The title sheet fractures into the original cinematic arrival; Enter starts it, and a skip control / reduced-motion fade remains available. The Aa button reopens the slide.
 - Cinematic arrival across the grounds and through the front entrance.
 - Five numbered galleries connected by a central hall.
 - Clickable symbolic objects, live text panels and a room-by-room reading view.
 - Assignment-specific editor with 37 entries, quotation references, word targets and a presentation checklist.
-- Shared Postgres storage, individual field autosaves, conflict review, version history and JSON backups.
+- Shared Postgres storage, individual field autosaves, conflict review, version history and JSON backups. Saves carry exact mutation identities, so continuing to type after your own save is acknowledged does not create a false classmate conflict. Tabs keep separate local drafts, with explicit recovery of unsaved work from closed tabs.
+- Optional JPEG / PNG / WebP uploads, captions and credits for every entry. Photos appear on the physical museum screens, in full entries and in the room compositions.
+- Control Map, Visual Journey, Contradiction Wall, Identity Archive and Curator’s Statement compositions use the assignment’s feature titles and connect saved writing and images in the requested order.
 - Guided tour, architectural cutaway, free walking, drag-to-look, touch joystick and fullscreen.
 - Opt-in synthesized ambient sound; no recorded voices or autoplay.
 - Physically based materials, a photographed cloud panorama, distant shoreline, moving water, sun and exhibit lighting, shadows, dust, foliage, fields, cabins, cart and jetty.
@@ -33,6 +36,8 @@ The user's supplied `Exhibition.docx` and updated `THE DOUGLASS EXHIBITION.pdf` 
 | III     | Opposing triptychs and a central lectern                       | Three pairs of contradictions, a creative exhibit and extended analysis                            |
 | IV      | Six linked archive stations                                    | Six identity stages, event / quotation / method / change interpretation, control of representation |
 | V       | Writing desk, suspended blank pages and eight quotation panels | Eight quotations, curator statement and synthesis                                                  |
+
+The room order follows the assignment: its thematic return to Chapters 9–10 in Room III is intentional. The five-event Visual Journey and six identity stages explicitly guide chronological ordering within those features. The prompts do not claim that the entire museum is a strictly linear biography.
 
 Each interactive location has a stable slot ID, such as `r2-stage-3` or `r5-curator-statement`. Geometry lives in `src/world.js`; the shared content model and guidance live in `src/exhibition-schema.js`. `src/exhibition-content.js` draws saved content onto the screens and renders the full entry. No quotations, historical arguments or completed student answers are prefilled.
 
@@ -71,11 +76,15 @@ For local shared editing, put server variables in `.env.local` (see `.env.exampl
 
 Each field has a database revision. Saving uses an atomic compare-and-swap operation and appends history in the same transaction. Different fields can save concurrently. Competing edits to the same field retain the local draft and shared version until the contributor chooses. Save identifiers make retries safe after a lost response. History is retained in the database and browsed in pages of 100 versions.
 
-The class key is a shared editing capability. It is stored only for the browser session, sent as an authorization header, and checked against a server-only SHA-256 hash (`EDITOR_SECRET_HASH`). Class invitation fragments are removed from the address bar after reading. Anyone given the key can edit the exhibition; keep it within the class. Neither the key nor database credentials belong in this repository. Rotate a compromised key by replacing the server hash and sharing the new key.
+The class key is a shared editing capability. It is stored only for the browser session, sent as an authorization header, and checked against server-only SHA-256 hashes. `EDITOR_SECRET_HASH` preserves the original case-sensitive key; `EDITOR_CLASS_KEY_HASH` accepts a readable DOUGLASS code after removing separators and normalizing capitalization. Both can coexist. Full invitation links can also be pasted into the key field. Class invitation fragments are removed from the address bar after reading. Anyone given the key can edit the exhibition; keep it within the class. Neither the key nor database credentials belong in this repository. Rotate a compromised key by replacing the server hash and sharing the new key.
+
+Uploaded images are resized in the browser to at most 1600 pixels on their longest edge and re-encoded before upload (at most 1 MB). The authenticated `/api/media` endpoint stores content-addressed bytes in the same Postgres database. Public image reads support both hosts. Images retain caption/credit fields and versioned references; JSON backups contain those references, not a standalone archive of image bytes. Replaced images remain available for history restoration.
 
 The default database namespace is `douglass-main`; `EXHIBITION_ID` is server-controlled. Database/service availability and browser storage remain practical limits: errors retain drafts where browser storage is available and show that shared saving has not succeeded. Keep occasional downloaded backups. No deletion or reset endpoint is exposed.
 
 ## Asset acknowledgments
+
+The opening and the author’s desk use the public-domain [1845 Narrative title-page scan](https://commons.wikimedia.org/wiki/File:LifeOfFrederickDouglassCover.jpg), originally from the University of North Carolina’s Documenting the American South collection. The desk is an interpretive model displaying a facsimile, not an authenticated possession.
 
 All modeled geometry and procedural textures / ambient sound were created for this project. The photographic textures below are by Poly Haven and distributed under [CC0](https://polyhaven.com/license):
 

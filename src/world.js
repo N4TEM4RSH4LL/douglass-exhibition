@@ -967,7 +967,23 @@ export function createWorld(
   function chain(x, surface, z, count = 8, scale = 1, yaw = 0) {
     exhibits.add(forgedChain(forgedIron, { x, surface, z, count, scale, yaw }));
   }
-  function book(x, y, z, s = 1, open = false, parent = exhibits) {
+  const narrativeMap = loader.load(assetBase + "archive/narrative-title.jpg");
+  narrativeMap.colorSpace = THREE.SRGBColorSpace;
+  narrativeMap.anisotropy = 8;
+  const narrativePage = new THREE.MeshStandardMaterial({
+    map: narrativeMap,
+    roughness: 0.96,
+    side: THREE.DoubleSide,
+  });
+  function book(
+    x,
+    y,
+    z,
+    s = 1,
+    open = false,
+    parent = exhibits,
+    facsimile = false,
+  ) {
     const g = new THREE.Group();
     g.position.set(x, y, z);
     g.scale.setScalar(s);
@@ -991,7 +1007,14 @@ export function createWorld(
           }
           if (side > 0) geometry.scale(1, 1, -1);
           geometry.computeVertexNormals();
-          const page = new THREE.Mesh(geometry, leaf === 8 ? paper : pageEdge);
+          const page = new THREE.Mesh(
+            geometry,
+            leaf === 8
+              ? facsimile && side > 0
+                ? narrativePage
+                : paper
+              : pageEdge,
+          );
           page.castShadow = page.receiveShadow = true;
           g.add(page);
         }
@@ -1490,7 +1513,7 @@ export function createWorld(
     }
   box(3.1, 0.34, 0.52, 0, 1.37, -15.86, darkwood, exhibits);
   for (const x of [-0.8, 0.8]) sphere(0.045, x, 1.37, -15.57, brass, exhibits);
-  book(-0.5, 1.685, -16.42, 1.05, true);
+  book(-0.5, 1.685, -16.42, 1.05, true, exhibits, true);
   book(1.2, 1.685, -16.6, 0.6);
   book(1.21, 1.783, -16.58, 0.6);
   inkwell(0.65, 1.685, -16.2);

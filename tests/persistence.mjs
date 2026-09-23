@@ -3,11 +3,18 @@ import { randomUUID, createHash } from "node:crypto";
 import { neon } from "@neondatabase/serverless";
 import http from "node:http";
 import handler from "../api/exhibition.js";
+import mediaHandler from "../api/media.js";
+import { normalizeClassCode } from "../src/class-access.js";
+import { readFile } from "node:fs/promises";
 import { CARDS, FIELD_BY_ID, progress } from "../src/exhibition-schema.js";
 const sql = neon(process.env.DATABASE_URL),
   namespace = "qa-" + randomUUID();
 process.env.EXHIBITION_ID = namespace;
 const token = randomUUID();
+const readableCode = "DOUGLASS-ABCD-2345-EF67-8910";
+process.env.EDITOR_CLASS_KEY_HASH = createHash("sha256")
+  .update(normalizeClassCode(readableCode))
+  .digest("hex");
 process.env.EDITOR_SECRET_HASH = createHash("sha256")
   .update(token)
   .digest("hex");
@@ -36,7 +43,12 @@ async function request(
       body,
       headers: {
         origin,
-        ...(auth ? { authorization: "Bearer " + token } : {}),
+        ...(auth
+          ? {
+              authorization:
+                "Bearer " + (typeof auth === "string" ? auth : token),
+            }
+          : {}),
       },
     },
     res,
@@ -57,6 +69,26 @@ const patch = (
 });
 try {
   assert.equal(CARDS.length, 37);
+  assert.equal(
+    (await request("GET", null, "?action=auth", "douglass abcd 2345 ef67 8910"))
+      .status,
+    200,
+  );
+  assert.equal(
+    (await request("GET", null, "?action=auth", "WRONG-CODE")).status,
+    401,
+  );
+  assert.equal(
+    (
+      await request(
+        "GET",
+        null,
+        "?action=auth",
+        `https://douglass-exhibition.vercel.app/editor.html#access=${token}`,
+      )
+    ).status,
+    200,
+  );
   assert.ok(Object.keys(FIELD_BY_ID).length > 180);
   assert.ok(progress({}).every((r) => r.complete === 0));
   assert.equal((await request("GET", null, "", false)).status, 200);
@@ -132,6 +164,10 @@ try {
   globalThis.localStorage = {
     getItem: (k) => storage.get(k) || null,
     setItem: (k, v) => storage.set(k, v),
+    get length() {
+      return storage.size;
+    },
+    key: (i) => [...storage.keys()][i],
   };
   globalThis.sessionStorage = {
     getItem: () => null,
@@ -139,7 +175,9 @@ try {
     removeItem() {},
   };
   const { SharedExhibition } = await import("../src/shared-store.js");
-  const client = () => {
+  const client = (sessionId) => {
+    globalThis.sessionStorage.getItem = (k) =>
+      k === "douglass-editor-session" ? sessionId || null : null;
     const s = new SharedExhibition({ editor: true });
     s.token = token;
     s.authorized = true;
@@ -161,7 +199,15 @@ try {
   assert.equal(b.values()["r1-symbol.title"], "Client A");
   a.online = false;
   a.edit("r1-symbol.meaning", "Offline draft retained");
-  const restored = client();
+  const newTab = client();
+  assert.equal(
+    Object.keys(newTab.pending).length,
+    0,
+    "A new tab must not adopt another editor's pending saves",
+  );
+  assert.ok(newTab.recoverableDrafts().some((d) => d.key === a.backupKey));
+  newTab.destroy();
+  const restored = client(a.clientId);
   assert.equal(
     restored.values()["r1-symbol.meaning"],
     "Offline draft retained",
@@ -173,6 +219,36 @@ try {
     (await request()).body.fields["r1-symbol.meaning"].value,
     "Offline draft retained",
   );
+  // Repeated edits from the same focused input must follow its own save revision.
+  const owner = client();
+  await owner.refresh();
+  const oldRevision = owner.fields["r1-symbol.title"].revision;
+  owner.edit("r1-symbol.title", "My first edit", oldRevision);
+  await owner.flush();
+  assert.ok(owner.isOwnSave(owner.fields["r1-symbol.title"]));
+  owner.edit("r1-symbol.title", "My continuing edit", oldRevision);
+  assert.ok(
+    !owner.pending["r1-symbol.title"].conflict,
+    "Own acknowledged save cannot create a classmate conflict",
+  );
+  await owner.flush();
+  // Identical display names are not proof of ownership: mutation identities are.
+  await request(
+    "PATCH",
+    patch(
+      "r1-symbol.title",
+      "Other editor, same display name",
+      owner.fields["r1-symbol.title"].revision,
+    ),
+  );
+  await owner.refresh();
+  owner.edit("r1-symbol.title", "Stale draft", oldRevision);
+  assert.ok(
+    owner.pending["r1-symbol.title"].conflict,
+    "Another editor must still trigger a real conflict",
+  );
+  owner.resolve("r1-symbol.title", "shared");
+  owner.destroy();
   // Lost acknowledgement: database committed, client saw a timeout; replay must not add a revision.
   const c = client();
   await c.refresh();
@@ -212,12 +288,61 @@ try {
     "PASS: two clients preserve conflicts, offline drafts survive reconstruction, retry after lost acknowledgement does not duplicate a save.",
   );
   // A real streaming HTTP connection receives committed edits without a reload.
-  const server = http.createServer(handler);
+  const server = http.createServer((req, res) =>
+    req.url.startsWith("/api/media")
+      ? mediaHandler(req, res)
+      : handler(req, res),
+  );
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const abort = new AbortController(),
     timeout = setTimeout(() => abort.abort(), 10000);
   try {
     const endpoint = `http://127.0.0.1:${server.address().port}/api/exhibition`;
+    const image = await readFile(
+      new URL("../public/archive/narrative-title.jpg", import.meta.url),
+    );
+    const upload = await fetch(endpoint.replace("/exhibition", "/media"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+      body: JSON.stringify({
+        image: "data:image/jpeg;base64," + image.toString("base64"),
+      }),
+    });
+    assert.equal(upload.status, 200);
+    const { reference } = await upload.json();
+    const fetched = await fetch(
+      endpoint.replace("/exhibition", "/media") + "?id=" + reference.slice(6),
+    );
+    assert.equal(fetched.status, 200);
+    assert.deepEqual(Buffer.from(await fetched.arrayBuffer()), image);
+    assert.equal(
+      (await request("PATCH", patch("r2-stage-1.image", reference))).status,
+      200,
+    );
+    assert.equal(
+      (
+        await request(
+          "PATCH",
+          patch("r2-stage-2.image", "https://untrusted.example/a.svg"),
+        )
+      ).status,
+      400,
+    );
+    const badUpload = await fetch(endpoint.replace("/exhibition", "/media"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+      body: JSON.stringify({ image: "data:image/jpeg;base64,PHN2Zz4=" }),
+    });
+    assert.equal(badUpload.status, 400);
+    console.log(
+      "PASS: shared image upload, byte-exact retrieval, versioned image reference, unsupported-image rejection.",
+    );
     const response = await fetch(endpoint + "?action=events", {
       signal: abort.signal,
     });
@@ -288,6 +413,7 @@ try {
   }
 } finally {
   await sql.transaction([
+    sql`DELETE FROM exhibition_media WHERE exhibition_id=${namespace}`,
     sql`DELETE FROM exhibition_history WHERE exhibition_id=${namespace}`,
     sql`DELETE FROM exhibition_fields WHERE exhibition_id=${namespace}`,
   ]);

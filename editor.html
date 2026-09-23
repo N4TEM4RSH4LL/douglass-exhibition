@@ -58,7 +58,13 @@
           hidden
           role="status"
         ></div>
+        <section id="draft-recovery" class="notice" hidden></section>
         <section id="content"></section>
+        <p id="collaboration-note" class="studio-footer" hidden>
+          Shared editing is unlocked. Classmates can edit different fields at
+          the same time. If two people change the same field, both versions are
+          kept for review.
+        </p>
         <footer class="studio-footer">
           Use your own edition to verify every quotation and reference.
           Completion checks track the required content; they do not grade your
@@ -85,9 +91,19 @@
           id="class-key"
           type="password"
           autocomplete="off"
+          autocapitalize="none"
+          autocorrect="off"
           spellcheck="false"
           required
-        /><label for="writer"
+        /><label class="key-visibility"
+          ><input id="show-key" type="checkbox" /> Show class key</label
+        >
+        <p class="fine-print">
+          Paste the class code or the full invitation link. The new DOUGLASS
+          class code accepts any capitalization, with or without spaces and
+          hyphens.
+        </p>
+        <label for="writer"
           >Your display name or initials <span>(optional)</span></label
         ><input
           id="writer"

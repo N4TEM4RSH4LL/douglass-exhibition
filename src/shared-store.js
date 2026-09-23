@@ -1,14 +1,17 @@
 import { FIELD_BY_ID } from "./exhibition-schema.js";
+import { extractAccessKey } from "./class-access.js";
 export const API_BASE =
   location.hostname === "n4tem4rsh4ll.github.io"
     ? "https://douglass-exhibition.vercel.app"
     : "";
 const BACKUP_KEY = "douglass-class-exhibition-drafts-v2";
+const DRAFT_PREFIX = "douglass-editor-draft-v3:";
 export class SharedExhibition {
   constructor({ editor = false } = {}) {
     this.editor = editor;
     this.fields = {};
     this.pending = {};
+    this.ownMutations = new Set();
     this.listeners = new Set();
     this.online = false;
     this.loaded = false;
@@ -21,9 +24,35 @@ export class SharedExhibition {
     this.writer = "Class contributor";
     if (editor) {
       try {
-        const b = JSON.parse(localStorage.getItem(BACKUP_KEY) || "{}");
+        this.clientId =
+          sessionStorage.getItem("douglass-editor-session") ||
+          crypto.randomUUID();
+        sessionStorage.setItem("douglass-editor-session", this.clientId);
+      } catch {
+        this.clientId = crypto.randomUUID();
+      }
+      try {
+        this.backupKey = DRAFT_PREFIX + this.clientId;
+        const saved = localStorage.getItem(this.backupKey);
+        const legacy = localStorage.getItem(BACKUP_KEY);
+        const migrate =
+          !saved && legacy && !localStorage.getItem(BACKUP_KEY + "-migrated");
+        const b = JSON.parse(saved || (migrate ? legacy : "{}"));
+        if (migrate) {
+          localStorage.setItem(
+            this.backupKey,
+            JSON.stringify({ ...b, editorSession: this.clientId }),
+          );
+          localStorage.setItem(BACKUP_KEY + "-migrated", this.clientId);
+        }
         this.fields = b.fields || {};
         this.pending = b.pending || {};
+        this.ownMutations = new Set(
+          [
+            ...(b.editorSession === this.clientId ? b.ownMutations || [] : []),
+            ...Object.values(this.pending).map((p) => p.mutationId),
+          ].filter(Boolean),
+        );
         this.writer = b.writer || this.writer;
       } catch {
         this.localError = "Your browser could not open its local backup.";
@@ -32,6 +61,41 @@ export class SharedExhibition {
         this.token = sessionStorage.getItem("douglass-editor-key") || "";
       } catch {}
     }
+  }
+  recoverableDrafts() {
+    const drafts = [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key?.startsWith(DRAFT_PREFIX) || key === this.backupKey) continue;
+        const draft = JSON.parse(localStorage.getItem(key));
+        const pending = Object.entries(draft.pending || {}).filter(
+          ([id, p]) => FIELD_BY_ID[id] && typeof p.value === "string",
+        );
+        if (pending.length)
+          drafts.push({
+            key,
+            writer: draft.writer || "Class contributor",
+            backedUpAt: draft.backedUpAt,
+            pending,
+          });
+      }
+    } catch {}
+    return drafts.sort((a, b) =>
+      String(b.backedUpAt).localeCompare(String(a.backedUpAt)),
+    );
+  }
+  recoverDraft(key) {
+    const draft = this.recoverableDrafts().find((d) => d.key === key);
+    if (!draft) return;
+    for (const [id, p] of draft.pending) {
+      if (this.pending[id] || p.value === this.fields[id]?.value) continue;
+      this.edit(id, p.value, p.baseRevision);
+    }
+    this.flush();
+  }
+  isOwnSave(row) {
+    return !!row?.mutationId && this.ownMutations.has(row.mutationId);
   }
   values() {
     const out = Object.fromEntries(
@@ -52,11 +116,13 @@ export class SharedExhibition {
     if (!this.editor) return;
     try {
       localStorage.setItem(
-        BACKUP_KEY,
+        this.backupKey || DRAFT_PREFIX + this.clientId,
         JSON.stringify({
           version: 2,
           fields: this.fields,
           pending: this.pending,
+          ownMutations: [...this.ownMutations].slice(-500),
+          editorSession: this.clientId,
           writer: this.writer,
           backedUpAt: new Date().toISOString(),
         }),
@@ -92,10 +158,11 @@ export class SharedExhibition {
       clearTimeout(timer);
     }
   }
-  async connect() {
+  async connect({ accessKey } = {}) {
     await this.refresh();
     this.startLive();
-    if (this.token) this.authenticate(this.token);
+    if (accessKey || this.token)
+      await this.authenticate(accessKey || this.token);
     this.timer = setInterval(() => {
       if (!document.hidden && !this.streamLive) this.refresh();
     }, 3000);
@@ -161,7 +228,10 @@ export class SharedExhibition {
       const p = this.pending[id];
       if (p && !this.inflight?.has(id)) {
         if (p.value === row.value) delete this.pending[id];
-        else if (p.baseRevision !== row.revision) p.conflict = row;
+        else if (this.isOwnSave(row)) {
+          p.baseRevision = row.revision;
+          delete p.conflict;
+        } else if (p.baseRevision !== row.revision) p.conflict = row;
       }
     }
     this.persist();
@@ -188,12 +258,21 @@ export class SharedExhibition {
     }
   }
   async authenticate(key) {
-    const previous = this.token;
-    this.token = key.trim();
+    const candidate = extractAccessKey(key);
+    const attempt = (this.authAttempt = (this.authAttempt || 0) + 1);
+    this.authorized = false;
     try {
-      const { status, body } = await this.request("?action=auth");
+      if (!candidate)
+        throw new Error(
+          "Enter the class key or paste your class invitation link.",
+        );
+      const { status, body } = await this.request("?action=auth", {
+        headers: { Authorization: `Bearer ${candidate}` },
+      });
+      if (attempt !== this.authAttempt) return false;
       if (status !== 200)
         throw new Error(body.error || "The class access key was not accepted.");
+      this.token = candidate;
       this.authorized = true;
       try {
         sessionStorage.setItem("douglass-editor-key", this.token);
@@ -203,7 +282,7 @@ export class SharedExhibition {
       await this.refresh();
       return true;
     } catch (e) {
-      this.token = previous;
+      if (attempt !== this.authAttempt) return false;
       this.authorized = false;
       this.error = e.message;
       this.notify();
@@ -211,6 +290,7 @@ export class SharedExhibition {
     }
   }
   logout() {
+    this.authAttempt = (this.authAttempt || 0) + 1;
     this.token = "";
     this.authorized = false;
     try {
@@ -221,11 +301,17 @@ export class SharedExhibition {
   edit(id, value, displayedRevision) {
     if (!FIELD_BY_ID[id]) throw new Error("Unknown exhibition field");
     const previous = this.pending[id];
-    const base =
+    let base =
       previous?.baseRevision ??
       displayedRevision ??
       this.fields[id]?.revision ??
       0;
+    if (
+      !previous?.conflict &&
+      this.isOwnSave(this.fields[id]) &&
+      this.fields[id].revision > base
+    )
+      base = this.fields[id].revision;
     const conflict =
       previous?.conflict ||
       ((this.fields[id]?.revision ?? 0) !== base ? this.fields[id] : null);
@@ -236,6 +322,7 @@ export class SharedExhibition {
       editedAt: new Date().toISOString(),
       ...(conflict ? { conflict } : {}),
     };
+    this.ownMutations.add(this.pending[id].mutationId);
     this.persist();
     this.notify();
     clearTimeout(this.debounce);
@@ -274,7 +361,12 @@ export class SharedExhibition {
         });
         if (status === 409) {
           const pending = this.pending[id];
-          if (pending) pending.conflict = body.current;
+          if (pending) {
+            if (this.isOwnSave(body.current)) {
+              pending.baseRevision = body.current.revision;
+              delete pending.conflict;
+            } else pending.conflict = body.current;
+          }
           this.fields[id] = body.current;
         } else if (status === 401) {
           this.authorized = false;
@@ -328,6 +420,7 @@ export class SharedExhibition {
         mutationId: crypto.randomUUID(),
       };
       delete this.pending[id].conflict;
+      this.ownMutations.add(this.pending[id].mutationId);
     }
     this.persist();
     this.notify();

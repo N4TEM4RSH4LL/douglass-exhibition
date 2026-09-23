@@ -1,0 +1,1220 @@
+{
+  "r1-symbol.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r1-symbol",
+    "room": 1
+  },
+  "r1-symbol.context": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r1-symbol",
+    "room": 1
+  },
+  "r1-symbol.meaning": {
+    "type": "textarea",
+    "maxLength": 2400,
+    "card": "r1-symbol",
+    "room": 1
+  },
+  "r1-control-1.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r1-control-1",
+    "room": 1
+  },
+  "r1-control-1.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r1-control-1",
+    "room": 1
+  },
+  "r1-control-1.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r1-control-1",
+    "room": 1
+  },
+  "r1-control-1.effect": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r1-control-1",
+    "room": 1
+  },
+  "r1-control-1.method": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r1-control-1",
+    "room": 1
+  },
+  "r1-control-2.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r1-control-2",
+    "room": 1
+  },
+  "r1-control-2.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r1-control-2",
+    "room": 1
+  },
+  "r1-control-2.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r1-control-2",
+    "room": 1
+  },
+  "r1-control-2.effect": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r1-control-2",
+    "room": 1
+  },
+  "r1-control-2.method": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r1-control-2",
+    "room": 1
+  },
+  "r1-control-3.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r1-control-3",
+    "room": 1
+  },
+  "r1-control-3.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r1-control-3",
+    "room": 1
+  },
+  "r1-control-3.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r1-control-3",
+    "room": 1
+  },
+  "r1-control-3.effect": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r1-control-3",
+    "room": 1
+  },
+  "r1-control-3.method": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r1-control-3",
+    "room": 1
+  },
+  "r1-control-4.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r1-control-4",
+    "room": 1
+  },
+  "r1-control-4.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r1-control-4",
+    "room": 1
+  },
+  "r1-control-4.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r1-control-4",
+    "room": 1
+  },
+  "r1-control-4.effect": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r1-control-4",
+    "room": 1
+  },
+  "r1-control-4.method": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r1-control-4",
+    "room": 1
+  },
+  "r1-turning-point.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r1-turning-point",
+    "room": 1
+  },
+  "r1-turning-point.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r1-turning-point",
+    "room": 1
+  },
+  "r1-turning-point.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r1-turning-point",
+    "room": 1
+  },
+  "r1-turning-point.before": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r1-turning-point",
+    "room": 1
+  },
+  "r1-turning-point.event": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r1-turning-point",
+    "room": 1
+  },
+  "r1-turning-point.after": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r1-turning-point",
+    "room": 1
+  },
+  "r1-turning-point.method": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r1-turning-point",
+    "room": 1
+  },
+  "r1-resistance.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r1-resistance",
+    "room": 1
+  },
+  "r1-resistance.change": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r1-resistance",
+    "room": 1
+  },
+  "r1-resistance.connection": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r1-resistance",
+    "room": 1
+  },
+  "r2-stage-1.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r2-stage-1",
+    "room": 2
+  },
+  "r2-stage-1.happens": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r2-stage-1",
+    "room": 2
+  },
+  "r2-stage-1.changes": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r2-stage-1",
+    "room": 2
+  },
+  "r2-stage-1.method": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r2-stage-1",
+    "room": 2
+  },
+  "r2-stage-1.freedom": {
+    "type": "select",
+    "maxLength": 3,
+    "card": "r2-stage-1",
+    "room": 2
+  },
+  "r2-stage-1.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r2-stage-1",
+    "room": 2
+  },
+  "r2-stage-1.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r2-stage-1",
+    "room": 2
+  },
+  "r2-stage-1.meaning": {
+    "type": "textarea",
+    "maxLength": 2400,
+    "card": "r2-stage-1",
+    "room": 2
+  },
+  "r2-stage-2.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r2-stage-2",
+    "room": 2
+  },
+  "r2-stage-2.happens": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r2-stage-2",
+    "room": 2
+  },
+  "r2-stage-2.changes": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r2-stage-2",
+    "room": 2
+  },
+  "r2-stage-2.method": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r2-stage-2",
+    "room": 2
+  },
+  "r2-stage-2.freedom": {
+    "type": "select",
+    "maxLength": 3,
+    "card": "r2-stage-2",
+    "room": 2
+  },
+  "r2-stage-2.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r2-stage-2",
+    "room": 2
+  },
+  "r2-stage-2.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r2-stage-2",
+    "room": 2
+  },
+  "r2-stage-2.meaning": {
+    "type": "textarea",
+    "maxLength": 2400,
+    "card": "r2-stage-2",
+    "room": 2
+  },
+  "r2-stage-3.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r2-stage-3",
+    "room": 2
+  },
+  "r2-stage-3.happens": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r2-stage-3",
+    "room": 2
+  },
+  "r2-stage-3.changes": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r2-stage-3",
+    "room": 2
+  },
+  "r2-stage-3.method": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r2-stage-3",
+    "room": 2
+  },
+  "r2-stage-3.freedom": {
+    "type": "select",
+    "maxLength": 3,
+    "card": "r2-stage-3",
+    "room": 2
+  },
+  "r2-stage-3.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r2-stage-3",
+    "room": 2
+  },
+  "r2-stage-3.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r2-stage-3",
+    "room": 2
+  },
+  "r2-stage-3.meaning": {
+    "type": "textarea",
+    "maxLength": 2400,
+    "card": "r2-stage-3",
+    "room": 2
+  },
+  "r2-stage-4.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r2-stage-4",
+    "room": 2
+  },
+  "r2-stage-4.happens": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r2-stage-4",
+    "room": 2
+  },
+  "r2-stage-4.changes": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r2-stage-4",
+    "room": 2
+  },
+  "r2-stage-4.method": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r2-stage-4",
+    "room": 2
+  },
+  "r2-stage-4.freedom": {
+    "type": "select",
+    "maxLength": 3,
+    "card": "r2-stage-4",
+    "room": 2
+  },
+  "r2-stage-4.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r2-stage-4",
+    "room": 2
+  },
+  "r2-stage-4.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r2-stage-4",
+    "room": 2
+  },
+  "r2-stage-4.meaning": {
+    "type": "textarea",
+    "maxLength": 2400,
+    "card": "r2-stage-4",
+    "room": 2
+  },
+  "r2-stage-5.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r2-stage-5",
+    "room": 2
+  },
+  "r2-stage-5.happens": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r2-stage-5",
+    "room": 2
+  },
+  "r2-stage-5.changes": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r2-stage-5",
+    "room": 2
+  },
+  "r2-stage-5.method": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r2-stage-5",
+    "room": 2
+  },
+  "r2-stage-5.freedom": {
+    "type": "select",
+    "maxLength": 3,
+    "card": "r2-stage-5",
+    "room": 2
+  },
+  "r2-stage-5.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r2-stage-5",
+    "room": 2
+  },
+  "r2-stage-5.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r2-stage-5",
+    "room": 2
+  },
+  "r2-stage-5.meaning": {
+    "type": "textarea",
+    "maxLength": 2400,
+    "card": "r2-stage-5",
+    "room": 2
+  },
+  "r2-internal-freedom.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r2-internal-freedom",
+    "room": 2
+  },
+  "r2-internal-freedom.claim": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r2-internal-freedom",
+    "room": 2
+  },
+  "r2-internal-freedom.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r2-internal-freedom",
+    "room": 2
+  },
+  "r2-internal-freedom.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r2-internal-freedom",
+    "room": 2
+  },
+  "r2-internal-freedom.analysis": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r2-internal-freedom",
+    "room": 2
+  },
+  "r2-connection.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r2-connection",
+    "room": 2
+  },
+  "r2-connection.connection": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r2-connection",
+    "room": 2
+  },
+  "r3-pair-1.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r3-pair-1",
+    "room": 3
+  },
+  "r3-pair-1.claim": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r3-pair-1",
+    "room": 3
+  },
+  "r3-pair-1.action": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r3-pair-1",
+    "room": 3
+  },
+  "r3-pair-1.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r3-pair-1",
+    "room": 3
+  },
+  "r3-pair-1.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r3-pair-1",
+    "room": 3
+  },
+  "r3-pair-1.method": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r3-pair-1",
+    "room": 3
+  },
+  "r3-pair-1.analysis": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r3-pair-1",
+    "room": 3
+  },
+  "r3-pair-2.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r3-pair-2",
+    "room": 3
+  },
+  "r3-pair-2.claim": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r3-pair-2",
+    "room": 3
+  },
+  "r3-pair-2.action": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r3-pair-2",
+    "room": 3
+  },
+  "r3-pair-2.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r3-pair-2",
+    "room": 3
+  },
+  "r3-pair-2.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r3-pair-2",
+    "room": 3
+  },
+  "r3-pair-2.method": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r3-pair-2",
+    "room": 3
+  },
+  "r3-pair-2.analysis": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r3-pair-2",
+    "room": 3
+  },
+  "r3-pair-3.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r3-pair-3",
+    "room": 3
+  },
+  "r3-pair-3.claim": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r3-pair-3",
+    "room": 3
+  },
+  "r3-pair-3.action": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r3-pair-3",
+    "room": 3
+  },
+  "r3-pair-3.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r3-pair-3",
+    "room": 3
+  },
+  "r3-pair-3.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r3-pair-3",
+    "room": 3
+  },
+  "r3-pair-3.method": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r3-pair-3",
+    "room": 3
+  },
+  "r3-pair-3.analysis": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r3-pair-3",
+    "room": 3
+  },
+  "r3-contradiction.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r3-contradiction",
+    "room": 3
+  },
+  "r3-contradiction.example": {
+    "type": "select",
+    "maxLength": 1,
+    "card": "r3-contradiction",
+    "room": 3
+  },
+  "r3-contradiction.format": {
+    "type": "select",
+    "maxLength": 20,
+    "card": "r3-contradiction",
+    "room": 3
+  },
+  "r3-contradiction.copy": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r3-contradiction",
+    "room": 3
+  },
+  "r3-contradiction.meaning": {
+    "type": "textarea",
+    "maxLength": 2400,
+    "card": "r3-contradiction",
+    "room": 3
+  },
+  "r3-analysis.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r3-analysis",
+    "room": 3
+  },
+  "r3-analysis.analysis": {
+    "type": "textarea",
+    "maxLength": 4500,
+    "card": "r3-analysis",
+    "room": 3
+  },
+  "r4-stage-1.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r4-stage-1",
+    "room": 4
+  },
+  "r4-stage-1.event": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r4-stage-1",
+    "room": 4
+  },
+  "r4-stage-1.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r4-stage-1",
+    "room": 4
+  },
+  "r4-stage-1.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r4-stage-1",
+    "room": 4
+  },
+  "r4-stage-1.method": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r4-stage-1",
+    "room": 4
+  },
+  "r4-stage-1.change": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r4-stage-1",
+    "room": 4
+  },
+  "r4-stage-1.meaning": {
+    "type": "textarea",
+    "maxLength": 2400,
+    "card": "r4-stage-1",
+    "room": 4
+  },
+  "r4-stage-2.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r4-stage-2",
+    "room": 4
+  },
+  "r4-stage-2.event": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r4-stage-2",
+    "room": 4
+  },
+  "r4-stage-2.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r4-stage-2",
+    "room": 4
+  },
+  "r4-stage-2.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r4-stage-2",
+    "room": 4
+  },
+  "r4-stage-2.method": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r4-stage-2",
+    "room": 4
+  },
+  "r4-stage-2.change": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r4-stage-2",
+    "room": 4
+  },
+  "r4-stage-2.meaning": {
+    "type": "textarea",
+    "maxLength": 2400,
+    "card": "r4-stage-2",
+    "room": 4
+  },
+  "r4-stage-3.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r4-stage-3",
+    "room": 4
+  },
+  "r4-stage-3.event": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r4-stage-3",
+    "room": 4
+  },
+  "r4-stage-3.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r4-stage-3",
+    "room": 4
+  },
+  "r4-stage-3.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r4-stage-3",
+    "room": 4
+  },
+  "r4-stage-3.method": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r4-stage-3",
+    "room": 4
+  },
+  "r4-stage-3.change": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r4-stage-3",
+    "room": 4
+  },
+  "r4-stage-3.meaning": {
+    "type": "textarea",
+    "maxLength": 2400,
+    "card": "r4-stage-3",
+    "room": 4
+  },
+  "r4-stage-4.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r4-stage-4",
+    "room": 4
+  },
+  "r4-stage-4.event": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r4-stage-4",
+    "room": 4
+  },
+  "r4-stage-4.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r4-stage-4",
+    "room": 4
+  },
+  "r4-stage-4.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r4-stage-4",
+    "room": 4
+  },
+  "r4-stage-4.method": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r4-stage-4",
+    "room": 4
+  },
+  "r4-stage-4.change": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r4-stage-4",
+    "room": 4
+  },
+  "r4-stage-4.meaning": {
+    "type": "textarea",
+    "maxLength": 2400,
+    "card": "r4-stage-4",
+    "room": 4
+  },
+  "r4-stage-5.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r4-stage-5",
+    "room": 4
+  },
+  "r4-stage-5.event": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r4-stage-5",
+    "room": 4
+  },
+  "r4-stage-5.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r4-stage-5",
+    "room": 4
+  },
+  "r4-stage-5.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r4-stage-5",
+    "room": 4
+  },
+  "r4-stage-5.method": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r4-stage-5",
+    "room": 4
+  },
+  "r4-stage-5.change": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r4-stage-5",
+    "room": 4
+  },
+  "r4-stage-5.meaning": {
+    "type": "textarea",
+    "maxLength": 2400,
+    "card": "r4-stage-5",
+    "room": 4
+  },
+  "r4-stage-6.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r4-stage-6",
+    "room": 4
+  },
+  "r4-stage-6.event": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r4-stage-6",
+    "room": 4
+  },
+  "r4-stage-6.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r4-stage-6",
+    "room": 4
+  },
+  "r4-stage-6.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r4-stage-6",
+    "room": 4
+  },
+  "r4-stage-6.method": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r4-stage-6",
+    "room": 4
+  },
+  "r4-stage-6.change": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r4-stage-6",
+    "room": 4
+  },
+  "r4-stage-6.meaning": {
+    "type": "textarea",
+    "maxLength": 2400,
+    "card": "r4-stage-6",
+    "room": 4
+  },
+  "r4-representation.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r4-representation",
+    "room": 4
+  },
+  "r4-representation.withholding": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r4-representation",
+    "room": 4
+  },
+  "r4-representation.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r4-representation",
+    "room": 4
+  },
+  "r4-representation.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r4-representation",
+    "room": 4
+  },
+  "r4-representation.shift": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r4-representation",
+    "room": 4
+  },
+  "r5-authors-desk.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r5-authors-desk",
+    "room": 5
+  },
+  "r5-authors-desk.meaning": {
+    "type": "textarea",
+    "maxLength": 2400,
+    "card": "r5-authors-desk",
+    "room": 5
+  },
+  "r5-authors-desk.connection": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r5-authors-desk",
+    "room": 5
+  },
+  "r5-curator-statement.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r5-curator-statement",
+    "room": 5
+  },
+  "r5-curator-statement.statement": {
+    "type": "textarea",
+    "maxLength": 3500,
+    "card": "r5-curator-statement",
+    "room": 5
+  },
+  "r5-quotation-1.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r5-quotation-1",
+    "room": 5
+  },
+  "r5-quotation-1.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r5-quotation-1",
+    "room": 5
+  },
+  "r5-quotation-1.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r5-quotation-1",
+    "room": 5
+  },
+  "r5-quotation-1.interpretation": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r5-quotation-1",
+    "room": 5
+  },
+  "r5-quotation-1.connection": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r5-quotation-1",
+    "room": 5
+  },
+  "r5-quotation-2.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r5-quotation-2",
+    "room": 5
+  },
+  "r5-quotation-2.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r5-quotation-2",
+    "room": 5
+  },
+  "r5-quotation-2.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r5-quotation-2",
+    "room": 5
+  },
+  "r5-quotation-2.interpretation": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r5-quotation-2",
+    "room": 5
+  },
+  "r5-quotation-2.connection": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r5-quotation-2",
+    "room": 5
+  },
+  "r5-quotation-3.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r5-quotation-3",
+    "room": 5
+  },
+  "r5-quotation-3.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r5-quotation-3",
+    "room": 5
+  },
+  "r5-quotation-3.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r5-quotation-3",
+    "room": 5
+  },
+  "r5-quotation-3.interpretation": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r5-quotation-3",
+    "room": 5
+  },
+  "r5-quotation-3.connection": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r5-quotation-3",
+    "room": 5
+  },
+  "r5-quotation-4.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r5-quotation-4",
+    "room": 5
+  },
+  "r5-quotation-4.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r5-quotation-4",
+    "room": 5
+  },
+  "r5-quotation-4.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r5-quotation-4",
+    "room": 5
+  },
+  "r5-quotation-4.interpretation": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r5-quotation-4",
+    "room": 5
+  },
+  "r5-quotation-4.connection": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r5-quotation-4",
+    "room": 5
+  },
+  "r5-quotation-5.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r5-quotation-5",
+    "room": 5
+  },
+  "r5-quotation-5.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r5-quotation-5",
+    "room": 5
+  },
+  "r5-quotation-5.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r5-quotation-5",
+    "room": 5
+  },
+  "r5-quotation-5.interpretation": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r5-quotation-5",
+    "room": 5
+  },
+  "r5-quotation-5.connection": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r5-quotation-5",
+    "room": 5
+  },
+  "r5-quotation-6.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r5-quotation-6",
+    "room": 5
+  },
+  "r5-quotation-6.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r5-quotation-6",
+    "room": 5
+  },
+  "r5-quotation-6.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r5-quotation-6",
+    "room": 5
+  },
+  "r5-quotation-6.interpretation": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r5-quotation-6",
+    "room": 5
+  },
+  "r5-quotation-6.connection": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r5-quotation-6",
+    "room": 5
+  },
+  "r5-quotation-7.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r5-quotation-7",
+    "room": 5
+  },
+  "r5-quotation-7.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r5-quotation-7",
+    "room": 5
+  },
+  "r5-quotation-7.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r5-quotation-7",
+    "room": 5
+  },
+  "r5-quotation-7.interpretation": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r5-quotation-7",
+    "room": 5
+  },
+  "r5-quotation-7.connection": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r5-quotation-7",
+    "room": 5
+  },
+  "r5-quotation-8.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r5-quotation-8",
+    "room": 5
+  },
+  "r5-quotation-8.quote": {
+    "type": "textarea",
+    "maxLength": 1800,
+    "card": "r5-quotation-8",
+    "room": 5
+  },
+  "r5-quotation-8.source": {
+    "type": "text",
+    "maxLength": 240,
+    "card": "r5-quotation-8",
+    "room": 5
+  },
+  "r5-quotation-8.interpretation": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r5-quotation-8",
+    "room": 5
+  },
+  "r5-quotation-8.connection": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r5-quotation-8",
+    "room": 5
+  },
+  "r5-synthesis.title": {
+    "type": "text",
+    "maxLength": 100,
+    "card": "r5-synthesis",
+    "room": 5
+  },
+  "r5-synthesis.argument": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r5-synthesis",
+    "room": 5
+  },
+  "r5-synthesis.creative": {
+    "type": "textarea",
+    "maxLength": 4000,
+    "card": "r5-synthesis",
+    "room": 5
+  }
+}

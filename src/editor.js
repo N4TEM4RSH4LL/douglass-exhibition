@@ -1,10 +1,14 @@
 import "./editor.css";
+import "./room-composition.css";
+import { mediaURL, uploadImage } from "./exhibition-media.js";
+import { compositionHTML } from "./room-composition.js";
 import {
   CARDS,
   CARD_BY_ID,
   FIELD_BY_ID,
   ROOMS,
   QUESTION,
+  ASSIGNMENT_NOTE,
   cardProgress,
   progress,
   wordCount,
@@ -118,15 +122,18 @@ function status() {
   $("#connection-notice").textContent = warnings.join(" ");
   $("#copy-invite").hidden = !store.authorized;
   $("#lock-editor").hidden = !store.authorized;
+  $("#collaboration-note").hidden = !store.authorized;
 }
 function fieldHTML(card, f) {
   const id = `${card.id}.${f.key}`,
     input =
-      f.type === "select"
-        ? `<select id="field-${id}" data-field="${id}"><option value="">Choose…</option>${f.options.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join("")}</select>`
-        : f.type === "text"
-          ? `<input id="field-${id}" data-field="${id}" maxlength="${f.maxLength}" autocomplete="off">`
-          : `<textarea id="field-${id}" data-field="${id}" maxlength="${f.maxLength}" rows="${f.targetWords ? 7 : f.key === "quote" ? 4 : 5}"></textarea>`;
+      f.type === "image"
+        ? `<input type="hidden" id="field-${id}" data-field="${id}"><div class="image-upload"><img data-image-preview="${id}" alt="" hidden><input aria-label="Upload image for ${esc(card.label)}" data-upload="${id}" type="file" accept="image/jpeg,image/png,image/webp"><button type="button" class="button" data-remove-image="${id}">Remove image</button><p data-upload-status="${id}" role="status"></p></div>`
+        : f.type === "select"
+          ? `<select id="field-${id}" data-field="${id}"><option value="">Choose…</option>${f.options.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join("")}</select>`
+          : f.type === "text"
+            ? `<input id="field-${id}" data-field="${id}" maxlength="${f.maxLength}" autocomplete="off">`
+            : `<textarea id="field-${id}" data-field="${id}" maxlength="${f.maxLength}" rows="${f.targetWords ? 7 : f.key === "quote" ? 4 : 5}"></textarea>`;
   return `<div class="field ${f.key === "quote" ? "quote" : ""}" data-field-wrap="${id}"><div class="field-label-row"><label for="field-${id}">${esc(f.label)}${f.required ? "" : ' <span class="optional-field">(optional)</span>'}</label><span class="field-state"></span></div><p class="field-help" id="help-${id}">${esc(f.help)}</p>${input}<div class="field-tools"><span class="word-count" data-count="${id}"></span><button class="history-button" type="button" data-history="${id}">Version history</button></div><div class="field-conflict" hidden></div></div>`;
 }
 function renderEntry() {
@@ -135,7 +142,7 @@ function renderEntry() {
     index = CARDS.indexOf(card),
     next = CARDS[index + 1];
   $("#content").innerHTML =
-    `<header class="room-intro"><span class="eyebrow">ROOM ${r.number} · EXHIBITION STUDIO</span><h1>${esc(r.title)}</h1><p>${esc(r.summary)}</p><div class="reading"><span>Reading</span>${esc(r.reading)}</div></header><article class="entry-card"><div class="entry-heading"><div><h2>${esc(card.label)}</h2><p>${esc(card.guide)}</p></div><span class="entry-progress" id="entry-progress"></span></div><form id="entry-form">${card.fields.map((f) => fieldHTML(card, f)).join("")}</form></article><div class="entry-bottom"><a href="./#room=${card.room}" target="_blank" rel="noopener">See Room ${r.number} in the museum ↗</a>${next ? `<button class="button" id="next-entry">Next: ${esc(next.label)} →</button>` : '<button class="button" id="review-all">Review the presentation →</button>'}</div>`;
+    `<header class="room-intro"><span class="eyebrow">ROOM ${r.number} · EXHIBITION STUDIO</span><h1>${esc(r.title)}</h1><p>${esc(r.summary)}</p><div class="reading"><span>Reading</span>${esc(r.reading)}</div><aside class="chronology-guide"><strong>Sequence &amp; connection</strong><p>${esc(r.chronology)}</p><p>${esc(r.bridge)}</p></aside></header><article class="entry-card"><div class="entry-heading"><div><h2>${esc(card.label)}</h2><p>${esc(card.guide)}</p></div><span class="entry-progress" id="entry-progress"></span></div><form id="entry-form">${card.fields.map((f) => fieldHTML(card, f)).join("")}</form></article><details class="composition-preview"><summary>Preview ${esc(r.feature)}</summary><div id="composition-preview"></div></details><div class="entry-bottom"><a href="./#room=${card.room}" target="_blank" rel="noopener">See Room ${r.number} in the museum ↗</a>${next ? `<button class="button" id="next-entry">Next: ${esc(next.label)} →</button>` : '<button class="button" id="review-all">Review the presentation →</button>'}</div>`;
   $("#entry-form").onsubmit = (e) => e.preventDefault();
   $$("[data-field]").forEach((input) => {
     input.setAttribute("aria-describedby", `help-${input.dataset.field}`);
@@ -155,11 +162,48 @@ function renderEntry() {
     input.onchange = () => store.flush();
     input.onblur = () => {
       store.flush();
-      queueMicrotask(render);
+      queueMicrotask(() => hydrateFields(store.values()));
     };
   });
   $$("[data-history]").forEach(
     (b) => (b.onclick = () => openHistory(b.dataset.history)),
+  );
+  $$("[data-upload]").forEach(
+    (input) =>
+      (input.onchange = async () => {
+        const file = input.files[0];
+        if (!file) return;
+        const id = input.dataset.upload,
+          message = document.querySelector(`[data-upload-status="${id}"]`);
+        if (!store.authorized) {
+          message.textContent =
+            "Unlock the editor, then select your image again.";
+          input.value = "";
+          access();
+          return;
+        }
+        const revision =
+          store.pending[id]?.baseRevision ?? store.fields[id]?.revision ?? 0;
+        input.disabled = true;
+        message.textContent = "Uploading and saving image…";
+        try {
+          const reference = await uploadImage(file, store.token);
+          store.edit(id, reference, revision);
+          await store.flush();
+          message.textContent = store.pending[id]
+            ? "Image uploaded · review its save status above."
+            : "Image saved for everyone.";
+        } catch (error) {
+          message.textContent = error.message;
+        } finally {
+          input.disabled = false;
+          input.value = "";
+        }
+      }),
+  );
+  $$("[data-remove-image]").forEach(
+    (button) =>
+      (button.onclick = () => store.edit(button.dataset.removeImage, "")),
   );
   if (next) $("#next-entry").onclick = () => select(next.id);
   else
@@ -173,10 +217,10 @@ function renderChecklist(values) {
   const pp = progress(values);
   const done = pp.reduce((a, p) => a + p.complete, 0);
   $("#content").innerHTML =
-    `<header class="overview-intro"><span class="eyebrow">COMPLETE PRESENTATION</span><h1>One exhibition. One clear argument.</h1><p>${done} of ${CARDS.length} entries contain all required fields and meet any specified word targets.</p><div class="central-question">${esc(QUESTION)}</div><p class="readiness-note">Before presenting, also check the accuracy of quotations, the quality of the analysis, chronological order, variety of evidence, and whether the connections between rooms make sense. A filled form alone does not establish these.</p></header>${ROOMS.map(
+    `<header class="overview-intro"><span class="eyebrow">COMPLETE PRESENTATION</span><h1>One exhibition. One clear argument.</h1><p>${done} of ${CARDS.length} entries contain all required fields and meet any specified word targets.</p><div class="central-question">${esc(QUESTION)}</div><p>${esc(ASSIGNMENT_NOTE)}</p><p class="readiness-note">Before presenting, also check the accuracy of quotations, the quality of the analysis, chronological order, variety of evidence, and whether the connections between rooms make sense. A filled form alone does not establish these.</p></header>${ROOMS.map(
       (r, i) => {
         const p = pp[i];
-        return `<section class="checklist-room"><span class="eyebrow">ROOM ${r.number} · ${p.complete}/${p.total} ENTRIES COMPLETE</span><h2>${esc(r.title)}</h2><p>${esc(r.reading)}</p><div class="progress-track"><i style="width:${Math.round((p.fieldsDone / p.fieldsTotal) * 100)}%"></i></div><ul>${r.requirements.map((s) => `<li>${esc(s)}</li>`).join("")}</ul><button class="button" data-review-room="${r.id}">Review Room ${r.number} →</button></section>`;
+        return `<section class="checklist-room"><span class="eyebrow">ROOM ${r.number} · ${p.complete}/${p.total} ENTRIES COMPLETE</span><h2>${esc(r.title)}</h2><p>${esc(r.reading)}</p><p class="chronology-note">${esc(r.chronology)}</p><div class="progress-track"><i style="width:${Math.round((p.fieldsDone / p.fieldsTotal) * 100)}%"></i></div><ul>${r.requirements.map((s) => `<li>${esc(s)}</li>`).join("")}</ul><button class="button" data-review-room="${r.id}">Review Room ${r.number} →</button></section>`;
       },
     ).join("")}`;
   $$("[data-review-room]").forEach(
@@ -203,11 +247,24 @@ function hydrateFields(values) {
       input.value = values[id] || "";
     if (!pending && input.value === (row?.value || ""))
       input.dataset.baseRevision = String(row?.revision || 0);
+    if (f.type === "image") {
+      const preview = wrap.querySelector("[data-image-preview]"),
+        src = mediaURL(values[id]);
+      preview.hidden = !src;
+      if (src && preview.getAttribute("src") !== src) preview.src = src;
+      preview.alt =
+        values[`${card.id}.imageCaption`] || `Image for ${card.label}`;
+    }
     const count = wordCount(values[id]),
       countNode = wrap.querySelector(".word-count");
-    countNode.textContent = f.targetWords
-      ? `${count} / ${f.targetWords} words${f.wordRange[0] !== f.wordRange[1] ? " approximately" : ""}`
-      : `${count} word${count === 1 ? "" : "s"}`;
+    countNode.textContent =
+      f.type === "image"
+        ? values[id]
+          ? "Shared image"
+          : "Optional image"
+        : f.targetWords
+          ? `${count} / ${f.targetWords} words${f.wordRange[0] !== f.wordRange[1] ? " approximately" : ""}`
+          : `${count} word${count === 1 ? "" : "s"}`;
     countNode.classList.toggle(
       "issue",
       !!f.wordRange &&
@@ -222,14 +279,19 @@ function hydrateFields(values) {
           ? "Not backed up locally"
           : "Saved locally · pending"
         : row
-          ? "Shared · v" + row.revision
+          ? `${store.isOwnSave(row) ? "Your save" : row.writer || "Class contributor"} · v${row.revision}`
           : "Not filled";
     state.classList.toggle("pending", !!pending);
     const conflict = wrap.querySelector(".field-conflict");
     conflict.hidden = !pending?.conflict;
-    if (pending?.conflict) {
+    if (!pending?.conflict) delete conflict.dataset.version;
+    if (
+      pending?.conflict &&
+      conflict.dataset.version !== JSON.stringify(pending.conflict)
+    ) {
       const version = pending.conflict;
-      conflict.innerHTML = `<strong>Another classmate changed this field.</strong><p>Your draft is still in the box above. Shared version ${version.revision}:</p><p>${esc(version.value || "(Empty)")}</p><button class="button" data-choice="shared">Use shared version</button><button class="button" data-choice="mine">Save my version instead</button>`;
+      conflict.dataset.version = JSON.stringify(version);
+      conflict.innerHTML = `<strong>${version.revision ? `${esc(version.writer || "Class contributor")} saved a different version.` : "This local draft has no matching shared version yet."}</strong><p>Your draft is still in the box above. ${version.revision ? `Shared version ${version.revision} · ${esc(new Date(version.updatedAt).toLocaleString())}:` : "Choose which version to keep:"}</p><p>${f.type === "image" && mediaURL(version.value) ? `<img class="conflict-image" src="${mediaURL(version.value)}" alt="Other saved image">` : esc(version.value || "(Empty)")}</p><button type="button" class="button" data-choice="shared">Use shared version</button><button type="button" class="button" data-choice="mine">Save my version instead</button>`;
       conflict
         .querySelectorAll("button")
         .forEach(
@@ -242,6 +304,19 @@ function render() {
   const values = store.values();
   status();
   renderNavigation(values);
+  const drafts = store.recoverableDrafts(),
+    recovery = $("#draft-recovery");
+  recovery.hidden = !drafts.length;
+  const draftSignature = JSON.stringify(drafts);
+  if (recovery.dataset.signature !== draftSignature) {
+    recovery.dataset.signature = draftSignature;
+    recovery.innerHTML = `<div><strong>Unsaved work from another tab</strong><p>Each tab keeps its own drafts. If an earlier tab was closed, recover its work here. Keep working in the original tab if it is still open.</p>${drafts.map((d) => `<p>${esc(d.writer)} · ${d.pending.length} field${d.pending.length === 1 ? "" : "s"} · ${esc(new Date(d.backedUpAt).toLocaleString())} <button class="button" data-recover-draft="${esc(d.key)}">Recover this draft</button></p>`).join("")}</div>`;
+    recovery
+      .querySelectorAll("[data-recover-draft]")
+      .forEach(
+        (b) => (b.onclick = () => store.recoverDraft(b.dataset.recoverDraft)),
+      );
+  }
   const key = showOverview ? "overview" : selected;
   if (showOverview) {
     renderChecklist(values);
@@ -253,6 +328,13 @@ function render() {
     renderKey = key;
   }
   hydrateFields(values);
+  $("#composition-preview").innerHTML = compositionHTML(
+    roomOfSelection(),
+    values,
+  );
+  $("#composition-preview")
+    .querySelectorAll("[data-open-entry]")
+    .forEach((b) => (b.onclick = () => select(b.dataset.openEntry)));
 }
 $("#overview-button").onclick = () => {
   showOverview = true;
@@ -264,11 +346,16 @@ function access() {
   const d = $("#access-dialog");
   $("#writer").value = store.writer === "Class contributor" ? "" : store.writer;
   $("#class-key").value = store.token;
+  $("#class-key").type = "password";
+  $("#show-key").checked = false;
   $("#access-error").textContent = "";
   d.showModal();
 }
 $("#access-button").onclick = access;
 $("#unlock").onclick = access;
+$("#show-key").onchange = (e) => {
+  $("#class-key").type = e.target.checked ? "text" : "password";
+};
 $$(".dialog-close").forEach(
   (b) => (b.onclick = () => b.closest("dialog").close()),
 );
@@ -377,7 +464,7 @@ async function openHistory(id) {
         ? rows
             .map(
               (row) =>
-                `<div class="history-entry"><div class="history-meta">Version ${row.revision} · ${esc(new Date(row.changedAt).toLocaleString())} · ${esc(row.writer)}</div><p class="history-value">${esc(row.value || "(Empty field)")}</p><button class="button" data-version="${row.revision}">Restore this version</button></div>`,
+                `<div class="history-entry"><div class="history-meta">Version ${row.revision} · ${esc(new Date(row.changedAt).toLocaleString())} · ${esc(row.writer)}</div><p class="history-value">${FIELD_BY_ID[id].type === "image" && mediaURL(row.value) ? `<img class="history-image" src="${mediaURL(row.value)}" alt="Previously saved image">` : esc(row.value || "(Empty field)")}</p><button class="button" data-version="${row.revision}">Restore this version</button></div>`,
             )
             .join("")
         : '<p class="empty-history">No shared versions yet. Unsaved drafts remain in your local backup.</p>';
@@ -404,9 +491,10 @@ async function openHistory(id) {
   await load();
 }
 store.subscribe(render);
-store.connect().then(async () => {
-  if (initialKey) {
-    const ok = await store.authenticate(initialKey);
-    if (!ok) access();
+store.connect({ accessKey: initialKey }).then(() => {
+  if (initialKey && !store.authorized) {
+    const message = store.error;
+    access();
+    $("#access-error").textContent = message;
   }
 });
