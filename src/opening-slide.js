@@ -1,4 +1,4 @@
-import { QUESTION } from "./exhibition-schema.js";
+import { openingText } from "./exhibition-schema.js";
 
 // A tessellated sheet: every triangle belongs to the original flat title page.
 // The shared edges prevent holes before the sheet breaks away.
@@ -64,7 +64,48 @@ export function createOpening({
     skip = root.querySelector("#skip-opening"),
     explore = root.querySelector("#explore-exhibition");
   const status = root.querySelector("#opening-status");
-  root.querySelector(".opening-question").textContent = QUESTION;
+  const readyScreen = root.querySelector("#ready-screen");
+  let stageName = "ready",
+    entryMode = "presentation",
+    useShatter = true;
+  let latestValues = {};
+  function update(values) {
+    latestValues = values;
+    if (busy) return;
+    const text = openingText(values);
+    root.querySelector(".opening-title:not(#ready-heading)").textContent =
+      text.title;
+    root.querySelector(".opening-task").textContent = text.task;
+    root.querySelector(".opening-question").textContent = text.question;
+    root.querySelector("#ready-heading").textContent = text.readyTitle;
+    const names = root.querySelector("#opening-presenter-names");
+    names.replaceChildren(
+      ...text.presenters
+        .split("\n")
+        .filter(Boolean)
+        .map((name) => {
+          const span = document.createElement("span");
+          span.textContent = name;
+          return span;
+        }),
+    );
+  }
+  function showTitle({ mode = "presentation", shatter = true } = {}) {
+    if (busy) return;
+    stageName = "title";
+    entryMode = mode;
+    useShatter = shatter;
+    readyScreen.hidden = true;
+    surface.hidden = false;
+    root.focus({ preventScroll: true });
+  }
+  function showReady() {
+    if (busy) return;
+    stageName = "ready";
+    readyScreen.hidden = false;
+    surface.hidden = true;
+    root.focus({ preventScroll: true });
+  }
   let ready = false,
     busy = false,
     active = !directRoom;
@@ -90,6 +131,7 @@ export function createOpening({
     surface.hidden = false;
     root.querySelector(".opening-fractures")?.remove();
     busy = false;
+    update(latestValues);
     show(false);
     document
       .querySelector(
@@ -99,8 +141,8 @@ export function createOpening({
       )
       ?.focus({ preventScroll: true });
   }
-  async function enter({ shatter = true, mode = "presentation" } = {}) {
-    if (!ready || busy || !active) return;
+  async function enter({ shatter = useShatter, mode = entryMode } = {}) {
+    if (!ready || busy || !active || stageName !== "title") return;
     busy = true;
     begin.disabled = skip.disabled = explore.disabled = true;
     status.textContent = "Entering the exhibition…";
@@ -189,30 +231,40 @@ export function createOpening({
     finish();
   }
   begin.onclick = () => enter();
-  explore.onclick = () => enter({ mode: "explore" });
-  skip.onclick = () => enter({ shatter: false });
+  root.querySelector("#show-title-slide").onclick = () => showTitle();
+  root.querySelector("#back-to-ready").onclick = showReady;
+  explore.onclick = () => showTitle({ mode: "explore" });
+  skip.onclick = () => showTitle({ shatter: false });
   root.addEventListener("keydown", (e) => {
+    if (e.code === "ArrowLeft" && stageName === "title" && !busy) {
+      e.preventDefault();
+      showReady();
+      return;
+    }
     if (
-      (e.code === "Space" || e.code === "Enter") &&
+      ["Space", "Enter", "ArrowRight"].includes(e.code) &&
       !e.repeat &&
       !e.target.closest("button,a")
     ) {
       e.preventDefault();
-      enter();
+      if (stageName === "ready") showTitle();
+      else enter();
     }
   });
   document.querySelector("#replay-opening").onclick = () => {
     if (busy) return;
     onReplay();
-    surface.hidden = false;
     show(true);
+    showReady();
     begin.disabled = skip.disabled = explore.disabled = !ready;
     status.textContent = ready
-      ? "Press Enter to present · Use ← / → to move through the rooms."
+      ? "Show the title slide when your class is ready."
       : "Preparing the museum…";
   };
+  update({});
   show(active);
   return {
+    update,
     get active() {
       return active;
     },
@@ -220,8 +272,7 @@ export function createOpening({
       ready = true;
       if (!busy) {
         begin.disabled = skip.disabled = explore.disabled = false;
-        status.textContent =
-          "Press Enter to present · Use ← / → to move through the rooms.";
+        status.textContent = "Show the title slide when your class is ready.";
       }
     },
   };

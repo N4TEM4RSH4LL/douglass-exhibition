@@ -140,9 +140,11 @@
 .presentation-mode #navigation,
 .presentation-mode #modes,
 .presentation-mode #arrival,
-.presentation-mode #entry,
-.presentation-mode #hotspots {
+.presentation-mode #entry {
   display: none !important;
+}
+.artifact-focused #presentation-controls {
+  visibility: hidden;
 }
 .presentation-mode .display-guidance,
 .presentation-mode .display-edit {
@@ -399,4 +401,29 @@
 }
 .ui-hidden #room-features {
   display: none;
+}
+
+.presentation-mode.walking #walk-hint {
+  display: block;
+}
+.presentation-mode.walking .presentation-nav {
+  opacity: 0.88;
+}
+@media (max-width: 700px) {
+  .presentation-mode.walking #walk-hint {
+    display: none;
+  }
+  .presentation-mode.walking #joystick {
+    bottom: 170px;
+  }
+  .presentation-top {
+    gap: 5px;
+  }
+  .presentation-top > div {
+    gap: 5px;
+  }
+  .presentation-top button {
+    font-size: 11px;
+    padding: 10px;
+  }
 }

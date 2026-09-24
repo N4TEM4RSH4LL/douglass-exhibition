@@ -203,3 +203,68 @@ assert.ok(
 console.log(
   "PASS: all five events share one paragraph, quote/source and freedom order; earlier writing is combined without rewriting or deleting originals.",
 );
+
+const { OPENING_CARD, openingText } =
+  await import("../src/exhibition-schema.js");
+assert.equal(openingText().title, "THE DOUGLASS EXHIBITION");
+assert.equal(
+  openingText().task,
+  "Create one connected museum-style exhibition that answers the question:",
+);
+assert.equal(
+  openingText().question,
+  "How does Douglass move from having his life controlled by others to controlling his own story?",
+);
+assert.equal(
+  openingText({ "opening-slide.title": "Class title" }).title,
+  "Class title",
+);
+assert.equal(openingText({ "opening-slide.task": "" }).task, "");
+assert.equal(CARDS.length, 37);
+for (const f of OPENING_CARD.fields)
+  assert.ok(FIELD_BY_ID[`opening-slide.${f.key}`]);
+const THREE = await import("three");
+const { pickBoard } = await import("../src/board-interaction.js");
+const testScene = new THREE.Scene(),
+  group = new THREE.Group();
+const board = new THREE.Mesh(
+  new THREE.PlaneGeometry(2, 2),
+  new THREE.MeshBasicMaterial(),
+);
+board.position.z = -3;
+board.userData.exhibitionSlot = "r2-stage-1";
+board.userData.exhibitionRoom = 2;
+group.add(board);
+testScene.add(group);
+testScene.updateMatrixWorld(true);
+const ray = new THREE.Raycaster(
+  new THREE.Vector3(),
+  new THREE.Vector3(0, 0, -1),
+);
+assert.equal(pickBoard(ray, testScene, 2), "r2-stage-1");
+assert.equal(pickBoard(ray, testScene, 1), null);
+group.visible = false;
+assert.equal(pickBoard(ray, testScene, 2), null);
+group.visible = true;
+const wall = new THREE.Mesh(
+  new THREE.PlaneGeometry(3, 3),
+  new THREE.MeshBasicMaterial(),
+);
+wall.position.z = -2;
+testScene.add(wall);
+testScene.updateMatrixWorld(true);
+assert.equal(
+  pickBoard(ray, testScene, 2),
+  null,
+  "A board behind a wall cannot be clicked",
+);
+wall.material.transparent = true;
+wall.material.opacity = 0.2;
+assert.equal(
+  pickBoard(ray, testScene, 2),
+  "r2-stage-1",
+  "Transparent glazing does not block a board",
+);
+console.log(
+  "PASS: verbatim opening defaults, shared editable opening fields, direct board picking and wall occlusion.",
+);

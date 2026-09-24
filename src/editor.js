@@ -4,6 +4,7 @@ import { mediaURL, uploadImage } from "./exhibition-media.js";
 import { compositionHTML } from "./room-composition.js";
 import {
   CARDS,
+  OPENING_CARD,
   CARD_BY_ID,
   FIELD_BY_ID,
   ROOMS,
@@ -31,7 +32,10 @@ const esc = (s) =>
   );
 const store = new SharedExhibition({ editor: true });
 const fragment = new URLSearchParams(location.hash.slice(1));
-let selected = CARD_BY_ID[fragment.get("card")]
+let openingEditing =
+  fragment.get("view") === "opening" ||
+  fragment.get("card") === OPENING_CARD.id;
+let selected = CARDS.some((c) => c.id === fragment.get("card"))
     ? fragment.get("card")
     : CARDS[0].id,
   showOverview = false,
@@ -58,6 +62,8 @@ function roomOfSelection() {
   return CARD_BY_ID[selected].room;
 }
 function select(id) {
+  if (id === OPENING_CARD.id) return editOpening();
+  openingEditing = false;
   if (!CARD_BY_ID[id]) return;
   selected = id;
   showOverview = false;
@@ -68,6 +74,7 @@ function select(id) {
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 function editFeature(room = roomOfSelection()) {
+  openingEditing = false;
   selected = CARDS.find((c) => c.room === room).id;
   showOverview = false;
   featureEditing = true;
@@ -77,6 +84,7 @@ function editFeature(room = roomOfSelection()) {
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 function renderNavigation(values) {
+  $("#edit-opening").classList.toggle("active", openingEditing);
   const pp = progress(values),
     room = roomOfSelection();
   $("#overall-count").textContent =
@@ -184,6 +192,21 @@ function entryFieldsHTML(card) {
       .map((f) => fieldHTML(card, f))
       .join("") + imageFields
   );
+}
+function editOpening() {
+  openingEditing = true;
+  showOverview = false;
+  featureEditing = false;
+  history.replaceState(null, "", "#view=opening");
+  renderKey = "";
+  render();
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+function renderOpeningEditor() {
+  $("#content").innerHTML =
+    `<header class="room-intro"><span class="eyebrow">PRESENTATION OPENING</span><h1>Opening slides</h1><p>The main slide starts with the document’s exact title, task sentence and question. The ready screen holds the names. Changes here save for the whole class.</p><a class="button" href="./?mode=presentation" target="_blank" rel="noopener">Preview opening ↗</a></header><article class="entry-card"><form id="entry-form">${OPENING_CARD.fields.map((f) => fieldHTML(OPENING_CARD, f)).join("")}</form></article>`;
+  $("#entry-form").onsubmit = (e) => e.preventDefault();
+  bindFields();
 }
 function renderFeatureEditor() {
   const room = roomOfSelection(),
@@ -333,7 +356,9 @@ function hydrateFields(values) {
       value =
         isJourneyEvent(card.id) && f.key === "analysis"
           ? eventParagraph(card.id, values)
-          : values[id] || "";
+          : Object.hasOwn(values, id)
+            ? values[id]
+            : f.defaultValue || "";
     if (document.activeElement !== input && input.value !== value)
       input.value = value;
     if (!pending && input.value === (row?.value || ""))
@@ -373,7 +398,9 @@ function hydrateFields(values) {
           ? `${store.isOwnSave(row) ? "Your save" : row.writer || "Class contributor"} · v${row.revision}`
           : value && isJourneyEvent(card.id) && f.key === "analysis"
             ? "Earlier writing · originals preserved"
-            : "Not filled";
+            : f.defaultValue && !Object.hasOwn(values, id)
+              ? "Default wording"
+              : "Not filled";
     state.classList.toggle("pending", !!pending);
     const conflict = wrap.querySelector(".field-conflict");
     conflict.hidden = !pending?.conflict;
@@ -410,18 +437,21 @@ function render() {
         (b) => (b.onclick = () => store.recoverDraft(b.dataset.recoverDraft)),
       );
   }
-  const key = showOverview
-    ? "overview"
-    : featureEditing
-      ? `feature-${roomOfSelection()}`
-      : selected;
+  const key = openingEditing
+    ? "opening"
+    : showOverview
+      ? "overview"
+      : featureEditing
+        ? `feature-${roomOfSelection()}`
+        : selected;
   if (showOverview) {
     renderChecklist(values);
     renderKey = key;
     return;
   }
   if (renderKey !== key) {
-    if (featureEditing) renderFeatureEditor();
+    if (openingEditing) renderOpeningEditor();
+    else if (featureEditing) renderFeatureEditor();
     else renderEntry();
     renderKey = key;
   }
@@ -435,8 +465,10 @@ function render() {
     .querySelectorAll("[data-open-entry]")
     .forEach((b) => (b.onclick = () => select(b.dataset.openEntry)));
 }
+$("#edit-opening").onclick = editOpening;
 $("#edit-feature").onclick = () => editFeature();
 $("#overview-button").onclick = () => {
+  openingEditing = false;
   showOverview = true;
   renderKey = "";
   render();

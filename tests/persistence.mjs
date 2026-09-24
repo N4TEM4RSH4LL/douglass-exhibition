@@ -189,6 +189,23 @@ try {
   console.log(
     "PASS: real database auth, input validation, CORS, independent edits, same-field conflicts, idempotent retries, reload and version restore.",
   );
+  const openingSaves = await Promise.all([
+    request("PATCH", patch("opening-slide.title", "Shared class title")),
+    request(
+      "PATCH",
+      patch("opening-slide.presenters", "First presenter\nSecond presenter"),
+    ),
+  ]);
+  assert.ok(openingSaves.every((r) => r.status === 200));
+  const savedOpening = (await request()).body.fields;
+  assert.equal(savedOpening["opening-slide.title"].value, "Shared class title");
+  assert.equal(
+    savedOpening["opening-slide.presenters"].value,
+    "First presenter\nSecond presenter",
+  );
+  console.log(
+    "PASS: opening text and presenters save independently with the existing class key.",
+  );
   // Exercise browser draft and conflict logic against the real database handler.
   const storage = new Map();
   globalThis.location = { hostname: "localhost" };

@@ -4,8 +4,9 @@ An explorable 3D museum with five connected galleries, set inside an interpretiv
 
 ## Experience
 
-- A classroom title slide names Nate Marshall, Layla Decaires, Marianna McKenzie and Lucas Maguire, with a clear title, guiding question and original book cover. The title sheet fractures into the original cinematic arrival; Enter starts presentation mode, and a skip control / reduced-motion fade remains available. The Aa button reopens the slide.
-- Separate **Start presentation** and **Explore full museum** modes. Presentation mode removes exploration controls and editing prompts, with large reading pages, room navigation and fullscreen. The full museum retains all exploration tools.
+- An **Are you ready?** screen shows the four presenters. Click **Show title slide** to reveal the main slide; its default title, task sentence and question are word-for-word from `Exhibition.docx`. Click the arrow again to fracture the slide into the original cinematic arrival. The reduced-motion / no-animation option remains available.
+- Separate presentation and full museum modes. Presentation mode keeps individual board zooms and the visible **Walk around** control alongside large reading pages, room navigation and fullscreen.
+- **Opening slides** in the studio edits the title, task sentence, question, ready heading and presenter names using the same class key, shared autosaves, conflict handling and history. Opening settings do not add to the 37-entry checklist.
 - Cinematic arrival across the grounds and through the front entrance.
 - Five numbered galleries connected by a central hall.
 - Clickable symbolic objects, live text panels and a room-by-room reading view.
@@ -23,13 +24,13 @@ An explorable 3D museum with five connected galleries, set inside an interpretiv
 
 ## Controls
 
-For class, choose **Start presentation** on the title slide or open `/?mode=presentation`. Use Right Arrow / Page Down to open a room feature, advance through its filled entries, then move to the next room. Left Arrow / Page Up goes back. The navigation bar can skip directly between rooms; **F** toggles fullscreen. Room V returns to the title slide. **Exit presentation** switches to full exploration. A room can be linked directly with `/?mode=presentation#room=2`.
+For class, open `/?mode=presentation`, choose **Show title slide**, then use its forward arrow to enter. **Explore full museum** selects the exploration view after the same title slide. Use Right Arrow / Page Down to open a room feature, advance through its filled entries, then move to the next room. Left Arrow / Page Up goes back. The navigation bar can skip directly between rooms; **F** toggles fullscreen. Room V returns to the title slide. **Exit presentation** switches to full exploration. A room can be linked directly with `/?mode=presentation#room=2`.
 
 In the full museum:
 
-Click the entrance icon or a Roman numeral to visit a room. Drag the view to look around. Click a small circular exhibit marker to inspect a display; close its panel with the cross or Escape. The play icon starts a guided tour. The stacked-layers icon opens the architectural cutaway.
+Click the entrance icon or a Roman numeral to visit a room. Drag the view to look around. Click a board itself or its circular exhibit marker to zoom in and inspect it; close its panel with the cross or Escape. The play icon starts a guided tour. The stacked-layers icon opens the architectural cutaway.
 
-The walking icon enables WASD / arrow-key movement. Move the mouse when pointer lock is available, or drag to look. Shift moves faster. On touchscreens, use the movement pad and drag the view. Escape exits walking. H hides the interface, F toggles fullscreen, and number keys 1–5 choose rooms. Audio is off until enabled.
+The visible **Walk around** button (in either mode), or the walking icon, enables WASD / arrow-key movement. **Back to room view** returns smoothly to the guided room camera. Move the mouse when pointer lock is available, or drag to look. Shift moves faster. On touchscreens, use the movement pad and drag the view. Escape exits walking. H hides the interface, F toggles fullscreen, and number keys 1–5 choose rooms. Audio is off until enabled.
 
 ## Exhibition structure
 

@@ -10,6 +10,7 @@ import {
 } from "./presentation-content.js";
 import { compositionHTML } from "./room-composition.js";
 import { createOpening } from "./opening-slide.js";
+import { pickBoard } from "./board-interaction.js";
 import * as THREE from "three";
 import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
 import {
@@ -167,6 +168,7 @@ const ambient = new THREE.AmbientLight("#b9cfc1", 0.3);
 scene.add(ambient);
 const world = createWorld(scene);
 const exhibition = connectExhibition(world);
+exhibition.store.subscribe(() => opening.update(exhibition.store.values()));
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(
@@ -226,13 +228,16 @@ function stopTour() {
   $("#tour").innerHTML = svg("tour");
 }
 function closeArtifact() {
+  document.body.classList.remove("artifact-focused");
   if ($("#artifact-panel").open) $("#artifact-panel").close();
   if (focus) {
     focus = null;
     fly([views[room]], 1.2);
+    updatePresentationControls();
   }
 }
 function updateUI() {
+  document.body.classList.remove("artifact-focused");
   $("#entry").hidden = room !== 0 || overview;
   $("#arrival span").textContent = roman[room] || "";
   $("#read-room").hidden = room === 0 || overview;
@@ -279,6 +284,7 @@ function openArtifact(h) {
   if (transition || walking || overview) return;
   stopTour();
   focus = h;
+  document.body.classList.add("artifact-focused");
   const outward = camera.position.clone().sub(h.position);
   outward.y = 0;
   outward.normalize();
@@ -409,6 +415,12 @@ $("#quality").onclick = () => {
 };
 quality();
 function walk() {
+  if (transition) return;
+  if (walking) {
+    keys.clear();
+    navigate(room);
+    return;
+  }
   stopTour();
   closeArtifact();
   overview = false;
@@ -431,10 +443,38 @@ function walk() {
   updateUI();
 }
 $("#walk").onclick = walk;
+$("#walk-page").onclick = walk;
+$("#presentation-walk").onclick = walk;
 const keys = new Set();
 window.addEventListener("keydown", (e) => {
   if (opening.active) return;
   if (presentationMode && !e.target.closest("input,textarea,select")) {
+    if (walking) {
+      if (e.code === "Escape") {
+        keys.clear();
+        navigate(room);
+      } else if (
+        [
+          "KeyW",
+          "KeyA",
+          "KeyS",
+          "KeyD",
+          "ArrowUp",
+          "ArrowDown",
+          "ArrowLeft",
+          "ArrowRight",
+          "ShiftLeft",
+        ].includes(e.code)
+      ) {
+        e.preventDefault();
+        keys.add(e.code);
+      } else if (e.code === "KeyF" && !e.repeat) $("#fullscreen").click();
+      return;
+    }
+    if ($("#artifact-panel").open) {
+      if (e.code === "Escape") closeArtifact();
+      return;
+    }
     if (
       ["ArrowRight", "PageDown", "Space", "ArrowLeft", "PageUp"].includes(
         e.code,
@@ -455,8 +495,8 @@ window.addEventListener("keydown", (e) => {
   if (e.code === "Escape") {
     if (focus) closeArtifact();
     if (walking) {
-      walking = false;
-      updateUI();
+      keys.clear();
+      navigate(room);
     }
     if (document.body.classList.contains("ui-hidden"))
       document.body.classList.remove("ui-hidden");
@@ -503,6 +543,22 @@ window.addEventListener("pointermove", (e) => {
 });
 window.addEventListener("pointerup", () => (drag = null));
 window.addEventListener("pointercancel", () => (drag = null));
+const boardRaycaster = new THREE.Raycaster();
+renderer.domElement.addEventListener("click", (e) => {
+  if (dragged || transition || walking || overview || focus || opening.active)
+    return;
+  const bounds = renderer.domElement.getBoundingClientRect();
+  boardRaycaster.setFromCamera(
+    new THREE.Vector2(
+      ((e.clientX - bounds.left) / bounds.width) * 2 - 1,
+      1 - ((e.clientY - bounds.top) / bounds.height) * 2,
+    ),
+    camera,
+  );
+  const id = pickBoard(boardRaycaster, scene, room);
+  const hotspot = world.hotspots.find((h) => h.id === id && h.room === room);
+  if (hotspot) openArtifact(hotspot);
+});
 renderer.domElement.addEventListener(
   "wheel",
   (e) => {
@@ -897,6 +953,11 @@ function updatePresentationControls() {
   $("#presentation-prev").disabled = room <= 1 || !!transition;
   $("#presentation-next").disabled = !!transition;
   $("#presentation-feature").disabled = !!transition;
+  for (const id of ["#presentation-walk", "#walk-page"]) {
+    $(id).textContent = walking ? "Back to room view" : "Walk around";
+    $(id).setAttribute("aria-pressed", String(walking));
+    $(id).disabled = !!transition;
+  }
 }
 function setPresentationMode(enabled) {
   presentationMode = enabled;

@@ -6,7 +6,8 @@
   color: #18392c;
   overflow: hidden;
 }
-.opening-page {
+.opening-page,
+.opening-ready-page {
   position: absolute;
   inset: 0;
   display: grid;
@@ -208,7 +209,8 @@
     serif;
 }
 @media (max-width: 700px) {
-  .opening-page {
+  .opening-page,
+  .opening-ready-page {
     padding: 28px;
     gap: 20px;
     overflow-y: auto;
@@ -251,7 +253,8 @@
   }
 }
 @media (max-height: 650px) and (min-width: 701px) {
-  .opening-page {
+  .opening-page,
+  .opening-ready-page {
     padding: 24px 42px;
     gap: 15px;
     overflow-y: auto;
@@ -272,5 +275,92 @@
   }
   .opening-kicker {
     margin-bottom: 10px;
+  }
+}
+
+.opening-masthead a {
+  color: inherit;
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.opening-document-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(30px, 5vw, 80px);
+  padding-bottom: 95px;
+  overflow-y: auto;
+}
+.opening-document-copy {
+  max-width: 1150px;
+  width: 100%;
+  text-align: center;
+}
+.opening-document-page .opening-title {
+  font-size: clamp(43px, min(7vw, 11vh), 120px);
+  line-height: 1.04;
+  margin: 0 0 5vh;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+}
+.opening-document-page .opening-kicker {
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  margin: 0 0 12px;
+}
+.opening-task {
+  font-size: clamp(17px, 1.8vw, 28px);
+  line-height: 1.5;
+  margin: 0 auto 20px;
+  max-width: 850px;
+  white-space: pre-wrap;
+}
+.opening-document-page .opening-question {
+  font-size: clamp(25px, min(3.2vw, 5vh), 48px);
+  max-width: 1080px;
+  margin: 0 auto;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.opening-document-controls {
+  position: absolute;
+  bottom: 25px;
+  left: 35px;
+  right: 35px;
+  display: flex;
+  justify-content: space-between;
+}
+.opening-document-controls button {
+  font-size: 25px;
+  min-width: 64px;
+  justify-content: center;
+}
+@media (max-width: 700px) {
+  .opening-document-page {
+    padding: 30px 24px 95px;
+  }
+  .opening-document-page .opening-title {
+    font-size: 45px;
+  }
+  .opening-document-page .opening-question {
+    font-size: 25px;
+  }
+  .opening-document-controls {
+    left: 24px;
+    right: 24px;
+    bottom: 20px;
+  }
+}
+@media (max-height: 500px) {
+  .opening-document-page {
+    justify-content: flex-start;
+  }
+  .opening-document-controls {
+    position: static;
+    width: 100%;
+    margin-top: 20px;
   }
 }

@@ -909,6 +909,8 @@ export function createWorld(
       );
       screen.position.z = 0.088;
       screen.userData.dynamic = true;
+      screen.userData.exhibitionSlot = id;
+      screen.userData.exhibitionRoom = room;
       g.add(screen);
       displays.push({ id, material, width: w - 0.065, height: h - 0.065 });
     }

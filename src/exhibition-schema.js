@@ -564,9 +564,72 @@ for (const card of cards)
     ),
   );
 export const CARDS = cards;
-export const CARD_BY_ID = Object.fromEntries(cards.map((c) => [c.id, c]));
+export const OPENING_CARD = {
+  id: "opening-slide",
+  room: 0,
+  label: "Opening slides",
+  fields: [
+    f(
+      "title",
+      "Exhibition title",
+      "Exact default wording from Exhibition.docx. Editing changes the opening for everyone.",
+      {
+        type: "text",
+        required: false,
+        maxLength: 180,
+        defaultValue: "THE DOUGLASS EXHIBITION",
+      },
+    ),
+    f("task", "Task sentence", "Exact default wording from Exhibition.docx.", {
+      required: false,
+      maxLength: 500,
+      defaultValue:
+        "Create one connected museum-style exhibition that answers the question:",
+    }),
+    f(
+      "question",
+      "Central question",
+      "Exact default wording from Exhibition.docx.",
+      { required: false, maxLength: 700, defaultValue: QUESTION },
+    ),
+    f(
+      "readyTitle",
+      "Ready screen heading",
+      "Shown before the main title slide.",
+      {
+        type: "text",
+        required: false,
+        maxLength: 120,
+        defaultValue: "Are you ready?",
+      },
+    ),
+    f(
+      "presenters",
+      "Presenters",
+      "One name per line. Names appear on the ready screen so the main slide contains only the document wording.",
+      {
+        required: false,
+        maxLength: 600,
+        defaultValue:
+          "Nate Marshall\nLayla Decaires\nMarianna McKenzie\nLucas Maguire",
+      },
+    ),
+  ],
+};
+export function openingText(values = {}) {
+  return Object.fromEntries(
+    OPENING_CARD.fields.map((f) => [
+      f.key,
+      Object.hasOwn(values, `${OPENING_CARD.id}.${f.key}`)
+        ? values[`${OPENING_CARD.id}.${f.key}`]
+        : f.defaultValue,
+    ]),
+  );
+}
+const storedCards = [...cards, OPENING_CARD];
+export const CARD_BY_ID = Object.fromEntries(storedCards.map((c) => [c.id, c]));
 export const FIELD_BY_ID = Object.fromEntries(
-  cards.flatMap((c) =>
+  storedCards.flatMap((c) =>
     c.fields.map((f) => [
       `${c.id}.${f.key}`,
       { ...f, card: c.id, room: c.room },

@@ -20,26 +20,19 @@
       aria-label="Presentation opening slide"
       tabindex="-1"
     >
-      <div class="opening-page">
+      <div id="ready-screen" class="opening-ready-page">
         <header class="opening-masthead">
-          <span>Frederick Douglass · 1845</span
-          ><span>A literary exhibition</span>
+          <span>THE DOUGLASS EXHIBITION</span
+          ><a href="./editor.html#view=opening" target="_blank" rel="noopener"
+            >Edit opening slides ↗</a
+          >
         </header>
         <div class="opening-hero">
           <div class="opening-copy">
-            <p class="opening-kicker">
-              Narrative of the Life of Frederick Douglass
-            </p>
-            <h1 class="opening-title">
-              <span>The Douglass</span><span>Exhibition</span>
-            </h1>
-            <p class="opening-question"></p>
+            <h1 id="ready-heading" class="opening-title">Are you ready?</h1>
             <div class="opening-presenters">
               <p>Presented by</p>
-              <div>
-                <span>Nate Marshall</span><span>Layla Decaires</span
-                ><span>Marianna McKenzie</span><span>Lucas Maguire</span>
-              </div>
+              <div id="opening-presenter-names"></div>
             </div>
           </div>
           <figure class="opening-illustration">
@@ -47,28 +40,22 @@
               <img
                 class="opening-book-page"
                 src="./archive/narrative-title.jpg"
-                alt="Title page of the 1845 Narrative of the Life of Frederick Douglass, written by himself"
+                alt="Original title page of Douglass’s 1845 Narrative"
                 width="354"
                 height="563"
               />
             </div>
-            <figcaption>
-              Written by himself<br /><a
-                href="https://commons.wikimedia.org/wiki/File:LifeOfFrederickDouglassCover.jpg"
-                target="_blank"
-                rel="noopener"
-                >Original title page · 1845 ↗</a
-              >
-            </figcaption>
           </figure>
         </div>
         <footer class="opening-footer">
           <div class="opening-actions">
-            <button id="begin-exhibition" class="opening-begin" disabled>
-              Start presentation <span aria-hidden="true">↗</span></button
-            ><button id="explore-exhibition" class="opening-explore" disabled>
-              Explore full museum</button
-            ><button id="skip-opening" class="opening-skip" disabled>
+            <button id="show-title-slide" class="opening-begin">
+              Show title slide <span aria-hidden="true">→</span>
+            </button>
+            <button id="explore-exhibition" class="opening-explore">
+              Explore full museum
+            </button>
+            <button id="skip-opening" class="opening-skip">
               Present without animation
             </button>
           </div>
@@ -76,6 +63,42 @@
             Preparing the museum…
           </p>
         </footer>
+      </div>
+      <div class="opening-page opening-document-page" hidden>
+        <div class="opening-document-copy">
+          <h1 class="opening-title">THE DOUGLASS EXHIBITION</h1>
+          <p class="opening-kicker">TASK</p>
+          <p class="opening-task">
+            Create one connected museum-style exhibition that answers the
+            question:
+          </p>
+          <p class="opening-question">
+            How does Douglass move from having his life controlled by others to
+            controlling his own story?
+          </p>
+        </div>
+        <nav
+          class="opening-document-controls"
+          aria-label="Opening slide controls"
+        >
+          <button
+            id="back-to-ready"
+            class="opening-explore"
+            aria-label="Return to ready screen"
+            title="Return to ready screen"
+          >
+            ←
+          </button>
+          <button
+            id="begin-exhibition"
+            class="opening-begin"
+            aria-label="Enter the exhibition"
+            title="Enter the exhibition"
+            disabled
+          >
+            →
+          </button>
+        </nav>
       </div>
     </section>
     <div
@@ -101,6 +124,9 @@
           title="Presentation opening slide"
         >
           Aa
+        </button>
+        <button id="walk-page" class="studio-link" aria-pressed="false">
+          Walk around
         </button>
         <button id="switch-presentation" class="studio-link" type="button">
           Presentation mode</button
@@ -161,7 +187,9 @@
       <div class="presentation-top">
         <span>THE DOUGLASS EXHIBITION</span>
         <div>
-          <button id="presentation-fullscreen">Fullscreen</button
+          <button id="presentation-walk" aria-pressed="false">
+            Walk around</button
+          ><button id="presentation-fullscreen">Fullscreen</button
           ><button id="exit-presentation">Exit presentation</button>
         </div>
       </div>
