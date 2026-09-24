@@ -1,5 +1,6 @@
 import {
   ROOMS,
+  isBoardVisible,
   CARDS,
   CARD_BY_ID,
   getDisplay,
@@ -56,10 +57,12 @@ export function compositionHTML(
       ? ""
       : `<button type="button" data-open-entry="${id}">${editable ? "All fields" : "View entry"} ↗</button>`;
   const entry = (id, body, number = "") =>
-    `<article class="composition-card" data-composition-card="${id}">${number ? `<span class="composition-number">${esc(number)}</span>` : ""}<h3 data-composition-title="${id}">${title(id)}</h3>${editable ? field(id, "title") : ""}${isJourneyEvent(id) ? "" : photo(id)}${body}${isJourneyEvent(id) ? photo(id) : ""}${open(id)}</article>`;
+    !editable && !isBoardVisible(id, values)
+      ? ""
+      : `<article class="composition-card" data-composition-card="${id}">${number ? `<span class="composition-number">${esc(number)}</span>` : ""}<h3 data-composition-title="${id}">${title(id)}</h3>${editable ? field(id, "title") : ""}${isJourneyEvent(id) ? "" : photo(id)}${body}${isJourneyEvent(id) ? photo(id) : ""}${open(id)}</article>`;
   let body = "";
   if (room === 1) {
-    body = `<div class="control-map"><div class="control-centre"><span>DOUGLASS</span>${photo("r1-symbol")}${text("r1-symbol", "context", "Douglass’s starting position")}${editable ? field("r1-symbol", "title") + field("r1-symbol", "meaning") : ""}${open("r1-symbol")}</div>${[1, 2, 3, 4].map((i) => entry(`r1-control-${i}`, quote(`r1-control-${i}`) + text(`r1-control-${i}`, "effect", "How it affects Douglass") + (editable ? field(`r1-control-${i}`, "method") : ""), String(i))).join("")}</div><div class="composition-connection"><h3>CONTROL → RESISTANCE</h3>${entry("r1-turning-point", quote("r1-turning-point") + text("r1-turning-point", "before", "Before") + text("r1-turning-point", "event", "The confrontation") + text("r1-turning-point", "after", "The turning point"))}${entry("r1-resistance", text("r1-resistance", "change", "What changes?") + text("r1-resistance", "connection", "Towards greater agency and freedom"))}</div>`;
+    body = `<div class="control-map">${!editable && !isBoardVisible("r1-symbol", values) ? "" : `<div class="control-centre"><span>DOUGLASS</span>${photo("r1-symbol")}${text("r1-symbol", "context", "Douglass’s starting position")}${editable ? field("r1-symbol", "title") + field("r1-symbol", "meaning") : ""}${open("r1-symbol")}</div>`}${[1, 2, 3, 4].map((i) => entry(`r1-control-${i}`, quote(`r1-control-${i}`) + text(`r1-control-${i}`, "effect", "How it affects Douglass") + (editable ? field(`r1-control-${i}`, "method") : ""), String(i))).join("")}</div><div class="composition-connection"><h3>CONTROL → RESISTANCE</h3>${entry("r1-turning-point", quote("r1-turning-point") + text("r1-turning-point", "before", "Before") + text("r1-turning-point", "event", "The confrontation") + text("r1-turning-point", "after", "The turning point"))}${entry("r1-resistance", text("r1-resistance", "change", "What changes?") + text("r1-resistance", "connection", "Towards greater agency and freedom"))}</div>`;
   }
   if (room === 2)
     body = `<div class="visual-journey">${[1, 2, 3, 4, 5]
@@ -89,6 +92,7 @@ export function compositionHTML(
     ]
       .map((i) => {
         const id = `r3-pair-${i}`;
+        if (!editable && !isBoardVisible(id, values)) return "";
         return `<article class="contradiction-pair"><h3 data-composition-title="${id}" data-title-prefix="${i}. ">${i}. ${title(id)}</h3>${editable ? field(id, "title") : ""}<div class="contradiction-columns">${text(id, "claim", "Claim")}${text(id, "action", "Action")}</div>${photo(id)}${quote(id)}${text(id, "method", "Douglass’s method")}${text(id, "analysis", "What the contradiction exposes")}${open(id)}</article>`;
       })
       .join(

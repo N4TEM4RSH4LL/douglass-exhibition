@@ -636,6 +636,26 @@ export const FIELD_BY_ID = Object.fromEntries(
     ]),
   ),
 );
+// Visibility is shared exhibition metadata, never an assignment response.
+for (const c of CARDS)
+  FIELD_BY_ID[`${c.id}.visibility`] = {
+    key: "visibility",
+    card: c.id,
+    room: c.room,
+    type: "select",
+    required: false,
+    label: "Board visibility",
+    help: "Changes apply to the whole class. Saved writing and version history are kept.",
+    maxLength: 12,
+    defaultValue: "shown",
+    options: [
+      ["shown", "In exhibition"],
+      ["hidden", "Removed from exhibition"],
+    ],
+  };
+export function isBoardVisible(id, values = {}) {
+  return values[`${displayBinding(id).card}.visibility`] !== "hidden";
+}
 Object.setPrototypeOf(CARD_BY_ID, null);
 Object.setPrototypeOf(FIELD_BY_ID, null);
 export function displayBinding(id) {

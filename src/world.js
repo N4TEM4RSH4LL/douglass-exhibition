@@ -912,7 +912,19 @@ export function createWorld(
       screen.userData.exhibitionSlot = id;
       screen.userData.exhibitionRoom = room;
       g.add(screen);
-      displays.push({ id, material, width: w - 0.065, height: h - 0.065 });
+      g.userData.exhibitionSlot = id;
+      // Preserve the whole frame as a removable group through static batching.
+      g.traverse((o) => {
+        if (o.isMesh) o.userData.dynamic = true;
+      });
+      displays.push({
+        id,
+        group: g,
+        screen,
+        material,
+        width: w - 0.065,
+        height: h - 0.065,
+      });
     }
     if (room)
       hotspot(
@@ -1522,6 +1534,36 @@ export function createWorld(
   quill(0.65, 1.86, -16.2, 0.7);
   box(0.32, 0.008, 0.34, 0.4, 1.687, -15.86, paper, exhibits);
   hotspot("r5-authors-desk", 5, 0, 2.3, -16.35);
+  // A quiet classroom easter egg, engraved between the author's desk handles.
+  const secretCanvas = document.createElement("canvas");
+  secretCanvas.width = 768;
+  secretCanvas.height = 192;
+  const secretInk = secretCanvas.getContext("2d");
+  secretInk.fillStyle = "#b8a06c";
+  secretInk.fillRect(0, 0, 768, 192);
+  secretInk.strokeStyle = "#594627";
+  secretInk.lineWidth = 4;
+  secretInk.strokeRect(14, 14, 740, 164);
+  secretInk.textAlign = "center";
+  secretInk.textBaseline = "middle";
+  secretInk.fillStyle = "#2d2d20";
+  secretInk.font = "italic 49px Georgia";
+  secretInk.fillText("if you see this", 384, 67);
+  secretInk.fillText("we get a level 7.", 384, 127);
+  const secretTexture = new THREE.CanvasTexture(secretCanvas);
+  secretTexture.colorSpace = THREE.SRGBColorSpace;
+  const secretMaterial = new THREE.MeshStandardMaterial({
+    map: secretTexture,
+    roughness: 0.65,
+    metalness: 0.25,
+  });
+  const secretPlaque = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.96, 0.24),
+    secretMaterial,
+  );
+  secretPlaque.position.set(0, 1.37, -15.592);
+  secretPlaque.name = "if you see this we get a level 7.";
+  exhibits.add(secretPlaque);
   const chair = new THREE.Group();
   chair.position.set(0, 0.45, -17.65);
   exhibits.add(chair);
@@ -1599,17 +1641,20 @@ export function createWorld(
     panel.updateWorldMatrix(true, true);
     const bounds = new THREE.Box3().setFromObject(panel);
     if (bounds.max.y < 1.6) continue;
-    colliders.push({
+    const collider = {
+      board: panel.userData.exhibitionSlot,
       x1: bounds.min.x - 0.24,
       x2: bounds.max.x + 0.24,
       z1: bounds.min.z - 0.24,
       z2: bounds.max.z + 0.24,
-    });
+    };
+    colliders.push(collider);
   }
   // Merge static opaque meshes by material to keep the entire scene light enough for a browser.
   function mergeStatic(group) {
     group.updateMatrixWorld(true);
     const batches = new Map();
+    const inverse = group.matrixWorld.clone().invert();
     const remove = [];
     group.traverse((o) => {
       if (
@@ -1626,6 +1671,7 @@ export function createWorld(
         ? o.geometry.toNonIndexed()
         : o.geometry.clone();
       geo.applyMatrix4(o.matrixWorld);
+      geo.applyMatrix4(inverse);
       if (!batches.has(key))
         batches.set(key, { material: o.material, geometries: [] });
       batches.get(key).geometries.push(geo);
@@ -1645,6 +1691,16 @@ export function createWorld(
         geometries.forEach((g) => g.dispose());
       }
     }
+  }
+  // Batch each removable frame independently: few draw calls, intact ownership.
+  for (const display of displays) {
+    display.group.traverse((o) => {
+      if (o.isMesh) o.userData.dynamic = o === display.screen;
+    });
+    mergeStatic(display.group);
+    display.group.traverse((o) => {
+      if (o.isMesh) o.userData.dynamic = true;
+    });
   }
   mergeStatic(exterior);
   mergeStatic(house);

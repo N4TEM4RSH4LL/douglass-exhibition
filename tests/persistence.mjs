@@ -119,6 +119,60 @@ try {
     (await request("PATCH", patch(["r1-symbol.title"], "invalid"))).status,
     400,
   );
+  assert.equal(
+    (
+      await request(
+        "PATCH",
+        patch("r2-stage-5.title", "Keep this board's writing"),
+      )
+    ).status,
+    200,
+  );
+  assert.equal(
+    (
+      await request(
+        "PATCH",
+        patch("r2-stage-5.visibility", "hidden"),
+        "",
+        false,
+      )
+    ).status,
+    401,
+  );
+  assert.equal(
+    (await request("PATCH", patch("r2-stage-5.visibility", "bad"))).status,
+    400,
+  );
+  const hide = await request("PATCH", patch("r2-stage-5.visibility", "hidden"));
+  assert.equal(hide.status, 200);
+  const hiddenState = (await request("GET", null, "", false)).body.fields;
+  assert.equal(hiddenState["r2-stage-5.visibility"].value, "hidden");
+  assert.equal(
+    hiddenState["r2-stage-5.title"].value,
+    "Keep this board's writing",
+  );
+  assert.equal(
+    (await request("PATCH", patch("r2-stage-5.visibility", "shown", 0))).status,
+    409,
+  );
+  assert.equal(
+    (
+      await request(
+        "PATCH",
+        patch("r2-stage-5.visibility", "shown", hide.body.field.revision),
+      )
+    ).status,
+    200,
+  );
+  assert.deepEqual(
+    (
+      await request("GET", null, "?action=history&field=r2-stage-5.visibility")
+    ).body.history.map((r) => r.value),
+    ["shown", "hidden"],
+  );
+  console.log(
+    "PASS: board removal is shared, authenticated, conflict-safe and reversible, retaining all writing and history.",
+  );
   const same = await Promise.all([
     request("PATCH", patch("r1-symbol.title", "First writer")),
     request("PATCH", patch("r1-symbol.title", "Second writer")),
@@ -420,6 +474,22 @@ try {
     }
     const initial = await snapshot();
     assert.ok(initial.fields);
+    const removal = await request(
+      "PATCH",
+      patch("r2-stage-4.visibility", "hidden"),
+    );
+    assert.equal(removal.status, 200);
+    let removedSnapshot;
+    do {
+      removedSnapshot = await snapshot();
+    } while (!removedSnapshot.fields["r2-stage-4.visibility"]);
+    assert.equal(
+      removedSnapshot.fields["r2-stage-4.visibility"].value,
+      "hidden",
+    );
+    console.log(
+      "PASS: public live viewers receive board removal through the same real-time stream.",
+    );
     const edit = await fetch(endpoint, {
       method: "PATCH",
       headers: {

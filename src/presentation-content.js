@@ -1,5 +1,6 @@
 import {
   CARDS,
+  isBoardVisible,
   ROOMS,
   getDisplay,
   isJourneyEvent,
@@ -18,6 +19,7 @@ export function presentationEntries(room, values) {
   return CARDS.filter(
     (c) =>
       c.room === room &&
+      isBoardVisible(c.id, values) &&
       visibleCardFields(c).some(
         (f) =>
           f.key !== "title" && getDisplay(c.id, values).values[f.key].trim(),
@@ -26,7 +28,7 @@ export function presentationEntries(room, values) {
 }
 export function presentationEntryHTML(id, values) {
   const data = getDisplay(id, values);
-  if (!data) return "";
+  if (!data || !isBoardVisible(id, values)) return "";
   const { card } = data,
     room = ROOMS[card.room - 1],
     v = data.values;

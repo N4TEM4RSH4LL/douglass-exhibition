@@ -945,3 +945,163 @@ dialog label span {
     border: 0;
   }
 }
+
+/* Opt-in: disabling developer mode destroys the WebGL preview to release its GPU. */
+.board-visibility {
+  padding: 18px;
+  margin-bottom: 28px;
+  border: 1px solid #b9c9b4;
+  background: #edf2e8;
+  border-radius: 8px;
+}
+.board-visibility p {
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 7px 0 12px;
+}
+.board-visibility.removed {
+  background: #f4e7d8;
+  border-color: #cda779;
+}
+.board-visibility details {
+  margin-top: 14px;
+}
+.board-visibility details summary {
+  cursor: pointer;
+  font-size: 12px;
+}
+.board-visibility .field {
+  margin-top: 16px;
+}
+.removed-badge {
+  display: block;
+  font-size: 10px;
+  color: #8a5830;
+  font-weight: 600;
+}
+#developer-mode[aria-pressed="true"] {
+  background: #193b30;
+  color: #fff;
+}
+.developer-preview {
+  position: sticky;
+  top: 91px;
+  height: calc(100dvh - 91px);
+  background: #e1dccf;
+  border-left: 1px solid #c5c5b6;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.developer-preview header {
+  padding: 20px 22px 14px;
+}
+.developer-preview h2 {
+  font:
+    600 26px Georgia,
+    serif;
+  margin: 8px 0 14px;
+}
+.preview-options {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+}
+.preview-options label {
+  font-size: 12px;
+  flex: 1;
+}
+.preview-options select {
+  font-size: 13px;
+  padding: 7px 10px;
+  margin-top: 6px;
+}
+#preview-frame-host {
+  flex: 1;
+  min-height: 260px;
+  position: relative;
+  background: #273d33;
+}
+#preview-frame-host iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  position: absolute;
+  inset: 0;
+}
+#preview-state {
+  margin: 0;
+  padding: 14px 22px;
+  font-size: 12px;
+  line-height: 1.55;
+}
+@media (min-width: 1000px) {
+  .developer-mode .studio-shell {
+    max-width: none;
+    grid-template-columns: 180px minmax(340px, 1fr) minmax(370px, 1fr);
+  }
+  .developer-mode .sidebar {
+    padding: 22px 14px;
+  }
+  .developer-mode #main {
+    min-width: 0;
+    padding: 28px 24px;
+  }
+  .developer-mode .room-intro h1 {
+    font-size: 34px;
+  }
+  .developer-mode .entry-card {
+    padding: 24px;
+  }
+  .developer-mode .header-actions {
+    gap: 12px;
+  }
+  .developer-mode .museum-link {
+    display: none;
+  }
+}
+@media (max-width: 999px) {
+  .developer-preview {
+    position: relative;
+    top: 0;
+    grid-column: 1 / -1;
+    height: 600px;
+  }
+  .developer-mode .studio-shell {
+    display: grid;
+  }
+  .developer-mode #developer-preview {
+    grid-row: 1;
+  }
+  .header-actions {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  #developer-mode {
+    padding: 8px;
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 1000px) {
+  .developer-mode .sidebar #room-tabs {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .developer-mode .sidebar #room-tabs button {
+    min-width: 0;
+    width: 100%;
+    height: 34px;
+    font-size: 16px;
+  }
+}
+@media (max-width: 730px) {
+  .developer-mode .studio-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .developer-mode #main {
+    min-width: 0;
+  }
+}

@@ -2,6 +2,8 @@ import "./style.css";
 import "./opening-slide.css";
 import "./room-composition.css";
 import "./presentation.css";
+import { graphicsProfile, savedGraphics } from "./graphics-settings.js";
+import { previewMessage } from "./developer-preview.js";
 import {
   presentationEntries,
   presentationEntryHTML,
@@ -28,7 +30,12 @@ import { createWorld } from "./world.js";
 import { createCameraJourney, advanceCameraJourney } from "./camera-journey.js";
 import { views, roomJourney } from "./museum-views.js";
 import { connectExhibition } from "./exhibition-content.js";
-import { ROOMS } from "./exhibition-schema.js";
+import {
+  ROOMS,
+  isBoardVisible,
+  displayBinding,
+  CARD_BY_ID,
+} from "./exhibition-schema.js";
 
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
@@ -75,6 +82,10 @@ for (let i = 1; i <= 5; i++) {
   b.title = `Room ${roman[i]}`;
   $("#room-buttons").append(b);
 }
+const previewMode =
+  new URLSearchParams(location.search).get("preview") === "board" &&
+  window.parent !== window;
+if (previewMode) document.body.classList.add("board-preview-mode");
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const initialRoom = Number(
   new URLSearchParams(location.hash.slice(1)).get("room"),
@@ -97,6 +108,11 @@ const opening = createOpening({
   },
 });
 const touch = matchMedia("(pointer: coarse)").matches;
+let graphicsChoice = previewMode
+  ? new URLSearchParams(location.search).get("quality") || "high"
+  : savedGraphics();
+let graphicsDegraded = false;
+let profile = graphicsProfile(graphicsChoice, { touch });
 let renderer;
 try {
   renderer = new THREE.WebGLRenderer({
@@ -109,8 +125,8 @@ try {
   throw error;
 }
 renderer.setSize(innerWidth, innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio, touch ? 1.3 : 1.65));
-renderer.shadowMap.enabled = true;
+renderer.setPixelRatio(profile.ratio);
+renderer.shadowMap.enabled = !!profile.shadows;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.13;
@@ -168,7 +184,7 @@ const ambient = new THREE.AmbientLight("#b9cfc1", 0.3);
 scene.add(ambient);
 const world = createWorld(scene);
 const exhibition = connectExhibition(world);
-exhibition.store.subscribe(() => opening.update(exhibition.store.values()));
+exhibition.store.subscribe(() => opening.update(exhibition.values()));
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(
@@ -179,8 +195,7 @@ const bloom = new UnrealBloomPass(
 );
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
-let lowQuality = touch,
-  room = 0,
+let room = 0,
   walking = false,
   overview = false,
   touring = false,
@@ -197,7 +212,7 @@ let interior = false,
   insideLight = 0,
   frameTimes = [],
   lastPerformance = performance.now(),
-  autoQuality = false;
+  lastRender = 0;
 const vec = (a) => new THREE.Vector3(...a);
 const yawPitch = new THREE.Euler(0, 0, 0, "YXZ");
 function setCamera(pos, look) {
@@ -281,7 +296,13 @@ function navigate(next, { auto = false } = {}) {
   );
 }
 function openArtifact(h) {
-  if (transition || walking || overview) return;
+  if (
+    transition ||
+    walking ||
+    overview ||
+    !isBoardVisible(h.id, exhibition.values())
+  )
+    return;
   stopTour();
   focus = h;
   document.body.classList.add("artifact-focused");
@@ -331,7 +352,15 @@ const roomFeatureElements = FEATURE_ANCHORS.map((anchor) => {
   return { ...anchor, position: new THREE.Vector3(...anchor.position), b };
 });
 exhibition.store.subscribe(() => {
+  renderer.shadowMap.needsUpdate = true;
+  if (focus?.id && !isBoardVisible(focus.id, exhibition.values()))
+    closeArtifact();
+  for (const button of $$("[data-reader-entry]")) {
+    if (!isBoardVisible(button.dataset.readerEntry, exhibition.values()))
+      button.remove();
+  }
   for (const { h, b } of hotspotElements) {
+    if (!isBoardVisible(h.id, exhibition.values())) b.hidden = true;
     b.title = exhibition.title(h.id);
     b.setAttribute("aria-label", `Inspect ${exhibition.title(h.id)}`);
   }
@@ -393,24 +422,64 @@ $("#fullscreen").onclick = async () => {
   } catch {}
 };
 function quality() {
-  renderer.setPixelRatio(Math.min(devicePixelRatio, lowQuality ? 1 : 1.65));
-  composer.setPixelRatio(renderer.getPixelRatio());
-  bloom.enabled = !lowQuality;
-  sun.shadow.mapSize.set(lowQuality ? 1024 : 2048, lowQuality ? 1024 : 2048);
+  profile = graphicsProfile(graphicsChoice, {
+    touch,
+    degraded: graphicsDegraded,
+    maxTextureSize: renderer.capabilities.maxTextureSize,
+    maxAnisotropy: renderer.capabilities.getMaxAnisotropy(),
+  });
+  renderer.setPixelRatio(profile.ratio);
+  composer.setPixelRatio(profile.ratio);
+  bloom.enabled = profile.bloom;
+  renderer.shadowMap.enabled = !!profile.shadows;
+  sun.shadow.mapSize.set(profile.shadows || 512, profile.shadows || 512);
   if (sun.shadow.map) {
     sun.shadow.map.dispose();
     sun.shadow.map = null;
   }
   renderer.shadowMap.needsUpdate = true;
-  $("#quality").setAttribute("aria-pressed", String(lowQuality));
-  $("#quality").setAttribute(
-    "aria-label",
-    lowQuality ? "Switch to high quality" : "Switch to performance mode",
-  );
+  world.dust.visible = profile.dust;
+  scene.traverse((object) => {
+    for (const material of Array.isArray(object.material)
+      ? object.material
+      : object.material
+        ? [object.material]
+        : []) {
+      for (const key of ["map", "normalMap", "roughnessMap", "bumpMap"]) {
+        if (material[key]?.isTexture) {
+          material[key].anisotropy = profile.anisotropy;
+          if (material[key].image?.width) material[key].needsUpdate = true;
+        }
+      }
+    }
+  });
+  exhibition.setResolution(profile.boards, profile.anisotropy);
+  $("#graphics-preset").value = graphicsChoice;
+  $("#graphics-description").textContent =
+    (graphicsChoice === "auto"
+      ? `Automatic is using ${profile.label}. It can lower detail if the frame rate stays low. `
+      : "") + profile.description;
+  $("#graphics-detail").textContent =
+    `${profile.ratio}× resolution · ${profile.shadows ? profile.shadows + " px shadows" : "Shadows off"} · ${profile.boards} px boards · ${profile.fps ? profile.fps + " FPS limit" : "Uncapped"}`;
+  $("#world").dataset.quality = profile.id;
 }
-$("#quality").onclick = () => {
-  lowQuality = !lowQuality;
-  autoQuality = true;
+function showGraphics() {
+  if (document.pointerLockElement) document.exitPointerLock();
+  keys.clear();
+  $("#graphics-dialog").showModal();
+}
+$("#quality").onclick = showGraphics;
+$("#presentation-graphics").onclick = showGraphics;
+$("#opening-graphics").onclick = showGraphics;
+$("#close-graphics").onclick = $("#apply-graphics").onclick = () =>
+  $("#graphics-dialog").close();
+$("#graphics-preset").onchange = () => {
+  graphicsChoice = $("#graphics-preset").value;
+  graphicsDegraded = false;
+  frameTimes = [];
+  try {
+    localStorage.setItem("douglass-graphics-v1", graphicsChoice);
+  } catch {}
   quality();
 };
 quality();
@@ -447,7 +516,7 @@ $("#walk-page").onclick = walk;
 $("#presentation-walk").onclick = walk;
 const keys = new Set();
 window.addEventListener("keydown", (e) => {
-  if (opening.active) return;
+  if (opening.active || previewMode || $("#graphics-dialog").open) return;
   if (presentationMode && !e.target.closest("input,textarea,select")) {
     if (walking) {
       if (e.code === "Escape") {
@@ -685,6 +754,9 @@ function animate() {
     clock.update();
     return;
   }
+  const now = performance.now();
+  if (profile.fps && now - lastRender < 1000 / profile.fps - 1) return;
+  lastRender = now;
   clock.update();
   const dt = Math.min(clock.getDelta(), 0.055);
   time += dt;
@@ -758,7 +830,7 @@ function animate() {
       room = rr;
       updateUI();
     }
-  } else if (!focus) {
+  } else if (!focus && !previewMode) {
     idleTime += dt;
     const v = overview ? views.overview : views[room];
     const base = vec(v.p),
@@ -821,7 +893,14 @@ function animate() {
   }
   const projected = new THREE.Vector3();
   hotspotElements.forEach(({ h, b }) => {
-    if (h.room !== room || transition || walking || overview || focus) {
+    if (
+      !isBoardVisible(h.id, exhibition.values()) ||
+      h.room !== room ||
+      transition ||
+      walking ||
+      overview ||
+      focus
+    ) {
       b.hidden = true;
       return;
     }
@@ -871,22 +950,27 @@ function animate() {
       THREE.MathUtils.clamp(((camera.position.z + 21) / 34) * 136 + 6, 6, 151),
     ),
   );
-  composer.render();
+  if (profile.bloom) composer.render();
+  else renderer.render(scene, camera);
   if (frames === 3) {
     $("#loading").classList.add("done");
     opening.setReady();
   }
   if (frames === 45) renderer.shadowMap.autoUpdate = false;
-  // A sustained low frame rate lowers resolution once; users can always override it.
-  if (!autoQuality && !lowQuality && frames > 120) {
+  // Explicit quality choices are never silently lowered.
+  if (
+    graphicsChoice === "auto" &&
+    !graphicsDegraded &&
+    !previewMode &&
+    frames > 120
+  ) {
     frameTimes.push(dt);
     if (frameTimes.length > 90) frameTimes.shift();
     if (
       frameTimes.length === 90 &&
       frameTimes.reduce((a, b) => a + b, 0) / 90 > 0.037
     ) {
-      lowQuality = true;
-      autoQuality = true;
+      graphicsDegraded = true;
       quality();
     }
   }
@@ -919,6 +1003,7 @@ $("#read-room").onclick = () => {
   for (const c of exhibition.roomEntries(room)) {
     const b = document.createElement("button");
     b.className = "room-entry-button";
+    b.dataset.readerEntry = c.id;
     b.textContent = exhibition.title(c.id) + " ↗";
     b.onclick = () => {
       $("#room-reader").close();
@@ -927,7 +1012,7 @@ $("#read-room").onclick = () => {
         world.hotspots.find((h) => h.id === c.id.replace("pair", "claim"));
       if (h) openArtifact(h);
       else {
-        focus = {};
+        focus = { id: c.id };
         exhibition.show(c.id);
         $("#artifact-panel").show();
       }
@@ -990,7 +1075,7 @@ function stepPresentation(direction) {
     else presentationRoom(direction);
     return;
   }
-  const entries = presentationEntries(room, exhibition.store.values());
+  const entries = presentationEntries(room, exhibition.values());
   const index = entries.findIndex((c) => c.id === presentationEntry);
   if (direction > 0 && index >= entries.length - 1) {
     presentationRoom(1);
@@ -1007,7 +1092,7 @@ function stepPresentation(direction) {
 function renderRoomComposition() {
   const el = $("#room-reader-content"),
     r = ROOMS[room - 1],
-    values = exhibition.store.values();
+    values = exhibition.values();
   lastCompositionValues = JSON.stringify(values);
   const focused = el.contains(document.activeElement)
     ? document.activeElement
@@ -1050,6 +1135,8 @@ function renderRoomComposition() {
           $("#room-reader").scrollTop = 0;
         } else {
           $("#room-reader").close();
+          if (!isBoardVisible(b.dataset.openEntry, exhibition.values())) return;
+          focus = { id: b.dataset.openEntry };
           exhibition.show(b.dataset.openEntry);
           $("#artifact-panel").show();
         }
@@ -1087,7 +1174,7 @@ exhibition.store.subscribe(() => {
   if (
     $("#room-reader").open &&
     $("#room-reader").classList.contains("composition-view") &&
-    lastCompositionValues !== JSON.stringify(exhibition.store.values())
+    lastCompositionValues !== JSON.stringify(exhibition.values())
   )
     renderRoomComposition();
 });
@@ -1095,5 +1182,81 @@ $("#close-room-reader").onclick = () => $("#room-reader").close();
 setPresentationMode(presentationMode);
 updateUI();
 animate();
-if (initialRoom >= 1 && initialRoom <= 5)
+if (initialRoom >= 1 && initialRoom <= 5 && !previewMode)
   setTimeout(() => navigate(initialRoom), 600);
+
+// A live, read-only camera on the same museum geometry and textures used by visitors.
+if (previewMode) {
+  let previewSlot = "",
+    previewShown = true;
+  const message = document.createElement("div");
+  message.id = "board-preview-message";
+  message.textContent = "Preparing live board…";
+  document.body.append(message);
+  function frameBoard(slot) {
+    const card = CARD_BY_ID[displayBinding(slot).card];
+    room = card.room;
+    transition = null;
+    walking = overview = false;
+    focus = null;
+    const display = world.displays.find((d) => d.id === slot);
+    if (display) {
+      display.screen.updateWorldMatrix(true, false);
+      const center = display.screen.getWorldPosition(new THREE.Vector3());
+      const rotation = display.screen.getWorldQuaternion(
+        new THREE.Quaternion(),
+      );
+      const normal = new THREE.Vector3(0, 0, 1).applyQuaternion(rotation);
+      camera.fov = 45;
+      camera.updateProjectionMatrix();
+      const fitHeight = Math.max(display.height, display.width / camera.aspect);
+      const distance =
+        (fitHeight / 2 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))) *
+        1.3;
+      setCamera(center.clone().addScaledVector(normal, distance), center);
+      // Align with tilted tabletop boards as well as vertical wall panels.
+      camera.up.copy(new THREE.Vector3(0, 1, 0).applyQuaternion(rotation));
+      camera.lookAt(center);
+    } else {
+      camera.up.set(0, 1, 0);
+      const h = world.hotspots.find((h) => h.id === slot),
+        view = views[room];
+      const look = h?.position || vec(view.t),
+        outward = vec(view.p).sub(look).normalize();
+      setCamera(look.clone().addScaledVector(outward, 3.1), look);
+    }
+    $("#world").dataset.previewSlot = slot;
+  }
+  window.addEventListener("message", (e) => {
+    if (e.origin !== location.origin || e.source !== window.parent) return;
+    const data = previewMessage(e.data);
+    if (!data) return;
+    exhibition.setPreview(data.values);
+    if (graphicsChoice !== data.quality) {
+      graphicsChoice = data.quality;
+      quality();
+    }
+    const visible = isBoardVisible(data.slot, data.values);
+    if (previewSlot !== data.slot || previewShown !== visible) {
+      previewSlot = data.slot;
+      previewShown = visible;
+      if (visible) frameBoard(data.slot);
+      else {
+        camera.up.set(0, 1, 0);
+        room = CARD_BY_ID[data.card].room;
+        setCamera(vec(views[room].p), vec(views[room].t));
+      }
+    }
+    message.textContent = visible ? "" : "Board removed from exhibition";
+    message.hidden = visible;
+    $("#world").dataset.boardVisible = String(visible);
+    renderer.shadowMap.needsUpdate = true;
+  });
+  window.addEventListener("resize", () => {
+    if (previewSlot && previewShown) frameBoard(previewSlot);
+  });
+  window.parent.postMessage(
+    { type: "douglass-preview-ready" },
+    location.origin,
+  );
+}

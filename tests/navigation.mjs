@@ -74,6 +74,36 @@ assert.ok(
   "All tree trunks must be on land",
 );
 assert.ok(world.displays.length >= 30);
+const { applyBoardVisibility } = await import("../src/board-interaction.js");
+const removedValues = Object.fromEntries(
+  CARDS.map((c) => [`${c.id}.visibility`, "hidden"]),
+);
+for (const d of world.displays) {
+  assert.equal(d.screen.parent, d.group);
+  assert.ok(
+    d.group.children.length >= 2,
+    "Frames remain inside each board group after batching",
+  );
+}
+applyBoardVisibility(world, removedValues);
+assert.ok(
+  world.displays.every((d) => !d.group.visible),
+  "Removing boards hides their entire frames",
+);
+assert.ok(
+  world.colliders.filter((c) => c.board).every((c) => c.enabled === false),
+  "Removed boards leave no invisible collision blockers",
+);
+const ghost = { x1: -1, x2: 1, z1: -1, z2: 1, enabled: false };
+assert.ok(pointClear(0, 0, [ghost]));
+assert.ok(segmentClear([-2, 0], [2, 0], [ghost]));
+applyBoardVisibility(world, {});
+assert.ok(world.displays.every((d) => d.group.visible));
+assert.ok(world.colliders.filter((c) => c.board).every((c) => c.enabled));
+console.log(
+  "PASS: removable frames survive batching; hidden boards remove actual collision blockers; restoration restores all geometry.",
+);
+
 assert.ok(
   world.displays.every((d) => getDisplay(d.id, {})),
   "Every 3D screen must have an editable assignment entry",

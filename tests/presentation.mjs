@@ -268,3 +268,85 @@ assert.equal(
 console.log(
   "PASS: verbatim opening defaults, shared editable opening fields, direct board picking and wall occlusion.",
 );
+
+const { isBoardVisible } = await import("../src/exhibition-schema.js");
+const { graphicsProfile } = await import("../src/graphics-settings.js");
+const { previewMessage } = await import("../src/developer-preview.js");
+for (const card of CARDS) {
+  const writing = Object.fromEntries(
+    card.fields
+      .filter((f) => f.type !== "image")
+      .map((f) => [`${card.id}.${f.key}`, "Writing to preserve"]),
+  );
+  const hidden = { ...writing, [`${card.id}.visibility`]: "hidden" };
+  assert.equal(isBoardVisible(card.id, hidden), false);
+  assert.ok(
+    !presentationEntries(card.room, hidden).some((c) => c.id === card.id),
+  );
+  assert.equal(presentationEntryHTML(card.id, hidden), "");
+  assert.ok(
+    !compositionHTML(card.room, hidden).includes(
+      `data-open-entry="${card.id}"`,
+    ),
+  );
+  assert.ok(
+    compositionHTML(card.room, hidden, {
+      field: (id, key) => `<input data-field="${id}.${key}">`,
+    }).includes(`${card.id}.title`),
+    "Removed writing stays editable",
+  );
+  assert.equal(hidden[`${card.id}.title`], "Writing to preserve");
+  assert.equal(
+    isBoardVisible(card.id, { ...hidden, [`${card.id}.visibility`]: "shown" }),
+    true,
+  );
+}
+assert.equal(
+  isBoardVisible("r3-claim-1", { "r3-pair-1.visibility": "hidden" }),
+  false,
+);
+assert.equal(
+  isBoardVisible("r3-action-1", { "r3-pair-1.visibility": "hidden" }),
+  false,
+);
+assert.equal(
+  isBoardVisible("r4-artifact-1", { "r4-stage-1.visibility": "hidden" }),
+  false,
+);
+assert.equal(
+  graphicsProfile("maximum", { degraded: true, touch: true }).id,
+  "maximum",
+  "Manual maximum never automatically downgrades",
+);
+assert.equal(graphicsProfile("auto", { degraded: true }).id, "low");
+assert.equal(
+  graphicsProfile("maximum", { maxTextureSize: 2048 }).shadows,
+  2048,
+);
+assert.equal(graphicsProfile("low").bloom, false);
+assert.equal(graphicsProfile("low").shadows, 0);
+assert.equal(previewMessage({ type: "wrong" }), null);
+assert.equal(
+  previewMessage({ type: "douglass-preview", card: "invalid", values: {} }),
+  null,
+);
+const safePreview = previewMessage({
+  type: "douglass-preview",
+  card: "r2-stage-1",
+  slot: "r1-symbol",
+  quality: "maximum",
+  values: {
+    "r2-stage-1.analysis": "Live draft",
+    "r2-stage-1.visibility": "hidden",
+    token: "not content",
+    "r2-stage-1.freedom": "bad",
+  },
+});
+assert.equal(safePreview.slot, "r2-stage-1");
+assert.deepEqual(safePreview.values, {
+  "r2-stage-1.analysis": "Live draft",
+  "r2-stage-1.visibility": "hidden",
+});
+console.log(
+  "PASS: every board removal clears presentation links, retains editable writing, hides aliases; device presets respect explicit choices; live preview validates content.",
+);

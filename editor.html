@@ -16,6 +16,9 @@
         ></a
       >
       <div class="header-actions">
+        <button class="button" id="developer-mode" aria-pressed="false">
+          Developer mode
+        </button>
         <span id="save-status" role="status" aria-live="polite"
           >Connecting to shared exhibition…</span
         ><a
@@ -83,6 +86,37 @@
           interpretation.
         </footer>
       </main>
+      <aside
+        id="developer-preview"
+        class="developer-preview"
+        aria-label="Live board preview"
+        hidden
+      >
+        <header>
+          <span class="eyebrow">DEVELOPER MODE · LIVE 3D</span>
+          <h2 id="preview-board-name">Choose a board</h2>
+          <div class="preview-options">
+            <label
+              >Preview quality<select id="preview-quality">
+                <option value="low">Low</option>
+                <option value="balanced">Balanced</option>
+                <option value="high" selected>High</option>
+                <option value="maximum">Maximum</option>
+              </select></label
+            >
+            <select
+              id="preview-board-side"
+              aria-label="Preview paired board"
+              hidden
+            >
+              <option value="claim">Claim board</option>
+              <option value="action">Conduct board</option>
+            </select>
+          </div>
+        </header>
+        <div id="preview-frame-host"></div>
+        <p id="preview-state" role="status"></p>
+      </aside>
     </div>
     <dialog id="access-dialog">
       <form id="access-form">

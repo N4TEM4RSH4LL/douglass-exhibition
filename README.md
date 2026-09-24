@@ -50,6 +50,16 @@ Room II's isolated simplification is integrated: each of the five events uses an
 
 Each interactive location has a stable slot ID, such as `r2-stage-3` or `r5-curator-statement`. Geometry lives in `src/world.js`; the shared content model and guidance live in `src/exhibition-schema.js`. `src/exhibition-content.js` draws saved content onto the screens and renders the full entry. No quotations, historical arguments or completed student answers are prefilled.
 
+## Board management, developer preview and graphics
+
+Each entry has **Remove board** / **Restore board** controls. The shared visibility revision removes its entire frame and screen, collision blocker, inspect targets and reading/presentation links for every viewer. Room III contradiction entries control both paired boards; Room IV removal also removes the linked artifact zoom target. Room furniture and symbolic objects stay in place. Writing, images and all revision history remain editable in the studio. Visibility uses the same authenticated, conflict-safe saves and live stream as the text. A visitor zoomed into a removed entry returns to the room automatically. Restore brings the existing board back without rewriting its content.
+
+**Developer mode** is explicitly enabled in the studio header. It opens a high-quality 3D view beside the editor and follows the selected entry (or focused field in the visual editor). Text and images update immediately, including drafts that have not saved to the shared server yet; the normal save indicator remains authoritative. Paired Room III entries have a claim/conduct selector. Turning developer mode off destroys the embedded renderer. On narrow screens the preview sits above the form. The preview accepts only validated content from its same-origin parent and never receives class credentials or writes to the database.
+
+**Graphics settings** are available on the ready screen, museum toolbar and presentation toolbar. Automatic can lower detail after a sustained slow frame rate. Low uses reduced resolution, no shadows/bloom and a 30 FPS cap; Balanced and High progressively increase detail. Maximum uses 2.5× supersampling, up to 4096px shadows, 2048px board textures and an uncapped frame rate. Explicit settings are never automatically reduced. Museum settings persist on each device; developer preview quality is independent and defaults to High.
+
+A small brass plaque between the author's desk handles in Room V contains the classroom easter egg: “if you see this we get a level 7.”
+
 ## Historical scope
 
 This is an artistic museum environment inspired by the landscape and building types of Maryland's Eastern Shore. It is not an exact reconstruction of Wye House, Covey's farm, or a home owned or occupied by Douglass. The house is a contemporary exhibition adaptation. Symbolic objects are interpretive models, not representations of authenticated surviving artifacts.

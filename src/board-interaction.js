@@ -1,3 +1,11 @@
+import { isBoardVisible } from "./exhibition-schema.js";
+export function applyBoardVisibility(world, values) {
+  for (const display of world.displays)
+    display.group.visible = isBoardVisible(display.id, values);
+  for (const collider of world.colliders)
+    if (collider.board)
+      collider.enabled = isBoardVisible(collider.board, values);
+}
 // Ignore atmosphere and transparent glazing, but never pick through an opaque wall.
 export function pickBoard(raycaster, scene, room) {
   for (const hit of raycaster.intersectObjects(scene.children, true)) {

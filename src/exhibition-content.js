@@ -1,8 +1,10 @@
+import { applyBoardVisibility } from "./board-interaction.js";
 import { mediaURL } from "./exhibition-media.js";
 import * as THREE from "three";
 import { SharedExhibition } from "./shared-store.js";
 import {
   CARDS,
+  isBoardVisible,
   CARD_BY_ID,
   ROOMS,
   getDisplay,
@@ -39,14 +41,15 @@ function lines(ctx, text, width, max) {
   return out;
 }
 const imageCache = new Map();
-function screenTexture(display, data) {
+function screenTexture(display, data, resolution = 1024, anisotropy = 4) {
   const c = document.createElement("canvas");
-  c.width = 1024;
-  c.height = Math.round((1024 * display.height) / display.width);
+  c.width = resolution;
+  c.height = Math.round((resolution * display.height) / display.width);
   const ctx = c.getContext("2d"),
-    w = c.width,
-    h = c.height,
+    w = 1024,
+    h = (1024 * display.height) / display.width,
     pad = 64;
+  ctx.scale(resolution / 1024, resolution / 1024);
   ctx.fillStyle = "#ded5bb";
   ctx.fillRect(0, 0, w, h);
   ctx.strokeStyle = "#9c8857";
@@ -114,7 +117,7 @@ function screenTexture(display, data) {
   ctx.fillText(lines(ctx, source, w - pad * 2, 1)[0], pad, h - 50 * scale);
   const texture = new THREE.CanvasTexture(c);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 4;
+  texture.anisotropy = anisotropy;
   return texture;
 }
 export function connectExhibition(world) {
@@ -122,13 +125,18 @@ export function connectExhibition(world) {
   let active = null,
     contentKey = "";
   const cache = new Map();
+  let previewValues = null,
+    resolution = 1024,
+    anisotropy = 4,
+    sharedValues = store.values();
+  const values = () => previewValues || sharedValues;
   function show(id) {
     active = id;
     contentKey = "";
     renderContent();
   }
   function renderContent() {
-    const data = getDisplay(active, store.values());
+    const data = getDisplay(active, values());
     if (!data) return;
     const key = active + JSON.stringify(data.values);
     if (key === contentKey) return;
@@ -162,10 +170,11 @@ export function connectExhibition(world) {
           "",
         )}</ul></details><a class="display-edit" href="./editor.html#card=${card.id}" target="_blank" rel="noopener">Contribute to this exhibit ↗</a>`;
   }
-  store.subscribe(() => {
-    const values = store.values();
+  function refresh() {
+    const current = values();
+    applyBoardVisibility(world, current);
     for (const display of world.displays) {
-      const data = getDisplay(display.id, values);
+      const data = getDisplay(display.id, current);
       if (!data) continue;
       const imageRef = data.values.image;
       if (mediaURL(imageRef) && !imageCache.has(imageRef)) {
@@ -174,10 +183,10 @@ export function connectExhibition(world) {
         image.crossOrigin = "anonymous";
         image.onload = () => {
           for (const d of world.displays) {
-            const latest = getDisplay(d.id, store.values());
+            const latest = getDisplay(d.id, values());
             if (latest?.values.image === imageRef) {
               d.material.map?.dispose();
-              d.material.map = screenTexture(d, latest);
+              d.material.map = screenTexture(d, latest, resolution, anisotropy);
               d.material.needsUpdate = true;
             }
           }
@@ -188,7 +197,12 @@ export function connectExhibition(world) {
       if (cache.get(display.id) === key) continue;
       cache.set(display.id, key);
       display.material.map?.dispose();
-      display.material.map = screenTexture(display, data);
+      display.material.map = screenTexture(
+        display,
+        data,
+        resolution,
+        anisotropy,
+      );
       display.material.color.set("#ffffff");
       display.material.needsUpdate = true;
     }
@@ -203,16 +217,35 @@ export function connectExhibition(world) {
         ? "Offline · showing the last shared version"
         : "Connecting to class exhibition…";
     status.classList.toggle("offline", !store.online);
+  }
+  store.subscribe(() => {
+    sharedValues = store.values();
+    refresh();
   });
   store.connect();
   return {
     show,
     store,
+    values,
+    setPreview(next) {
+      previewValues = next;
+      refresh();
+    },
+    setResolution(next, filtering = 4) {
+      if (next !== resolution || filtering !== anisotropy) {
+        resolution = next;
+        anisotropy = filtering;
+        cache.clear();
+        refresh();
+      }
+    },
     roomEntries(room) {
-      return CARDS.filter((c) => c.room === room);
+      return CARDS.filter(
+        (c) => c.room === room && isBoardVisible(c.id, values()),
+      );
     },
     title(id) {
-      return getDisplay(id, store.values())?.title || displayBinding(id).label;
+      return getDisplay(id, values())?.title || displayBinding(id).label;
     },
   };
 }

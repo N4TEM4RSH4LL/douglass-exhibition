@@ -1,9 +1,11 @@
 import "./editor.css";
+import { createDeveloperPreview } from "./developer-preview.js";
 import "./room-composition.css";
 import { mediaURL, uploadImage } from "./exhibition-media.js";
 import { compositionHTML } from "./room-composition.js";
 import {
   CARDS,
+  isBoardVisible,
   OPENING_CARD,
   CARD_BY_ID,
   FIELD_BY_ID,
@@ -55,6 +57,9 @@ if (initialKey) {
     location.pathname + (fragment.toString() ? "#" + fragment.toString() : ""),
   );
 }
+const developer = createDeveloperPreview(store, () =>
+  openingEditing || showOverview ? null : selected,
+);
 let renderKey = "",
   historyField = "",
   importChanges = [];
@@ -66,6 +71,7 @@ function select(id) {
   openingEditing = false;
   if (!CARD_BY_ID[id]) return;
   selected = id;
+  developer.select();
   showOverview = false;
   featureEditing = false;
   history.replaceState(null, "", `#card=${encodeURIComponent(id)}`);
@@ -76,12 +82,39 @@ function select(id) {
 function editFeature(room = roomOfSelection()) {
   openingEditing = false;
   selected = CARDS.find((c) => c.room === room).id;
+  developer.select();
   showOverview = false;
   featureEditing = true;
   history.replaceState(null, "", `#room=${room}&view=feature`);
   renderKey = "";
   render();
   window.scrollTo({ top: 0, behavior: "instant" });
+}
+function visibilityHTML(card) {
+  const f = FIELD_BY_ID[`${card.id}.visibility`];
+  return `<section class="board-visibility" data-visibility="${card.id}"><div><strong data-visibility-label></strong><p>${card.id.startsWith("r3-pair-") ? "This controls both the claim and conduct boards. " : ""}Removal applies to the museum, zoom controls and presentation for everyone. Your writing is kept here.</p></div><button class="button" type="button" data-toggle-board="${card.id}">Remove board</button><details><summary>Visibility status &amp; history</summary>${fieldHTML(card, f)}</details></section>`;
+}
+function bindVisibility() {
+  $$("[data-toggle-board]").forEach(
+    (button) =>
+      (button.onclick = () => {
+        if (!store.authorized) {
+          access();
+          return;
+        }
+        const id = button.dataset.toggleBoard,
+          field = `${id}.visibility`;
+        if (store.pending[field]?.conflict) return;
+        store.edit(
+          field,
+          isBoardVisible(id, store.values()) ? "hidden" : "shown",
+          store.pending[field]?.baseRevision ??
+            store.fields[field]?.revision ??
+            0,
+        );
+        store.flush();
+      }),
+  );
 }
 function renderNavigation(values) {
   $("#edit-opening").classList.toggle("active", openingEditing);
@@ -98,7 +131,7 @@ function renderNavigation(values) {
     CARDS.filter((c) => c.room === room)
       .map(
         (c) =>
-          `<button class="card-link ${c.id === selected && !showOverview ? "active" : ""} ${cardProgress(c, values).complete ? "complete" : ""}" data-card="${c.id}"><span class="card-dot" aria-hidden="true"></span>${esc(c.label)}</button>`,
+          `<button class="card-link ${c.id === selected && !showOverview ? "active" : ""} ${cardProgress(c, values).complete ? "complete" : ""}" data-card="${c.id}"><span class="card-dot" aria-hidden="true"></span>${esc(c.label)}${isBoardVisible(c.id, values) ? "" : ' <small class="removed-badge">Removed</small>'}</button>`,
       )
       .join("");
   $$("#room-tabs button").forEach(
@@ -195,6 +228,7 @@ function entryFieldsHTML(card) {
 }
 function editOpening() {
   openingEditing = true;
+  developer.select();
   showOverview = false;
   featureEditing = false;
   history.replaceState(null, "", "#view=opening");
@@ -219,7 +253,9 @@ function renderFeatureEditor() {
         field: (id, key) => {
           const c = CARD_BY_ID[id],
             f = c.fields.find((f) => f.key === key);
-          return f ? fieldHTML(c, f) : "";
+          return f
+            ? (key === "title" ? visibilityHTML(c) : "") + fieldHTML(c, f)
+            : "";
         },
       },
     )}</form>`;
@@ -236,7 +272,7 @@ function renderEntry() {
     index = CARDS.indexOf(card),
     next = CARDS[index + 1];
   $("#content").innerHTML =
-    `<header class="room-intro"><span class="eyebrow">ROOM ${r.number} · EXHIBITION STUDIO</span><h1>${esc(r.title)}</h1><p>${esc(r.summary)}</p><div class="reading"><span>Reading</span>${esc(r.reading)}</div><details class="chronology-guide"><summary>Reading order &amp; connection</summary><p>${esc(r.chronology)}</p><p>${esc(r.bridge)}</p></details></header><article class="entry-card"><div class="entry-heading"><div><h2>${esc(card.label)}</h2><p>${esc(card.guide)}</p></div><span class="entry-progress" id="entry-progress"></span></div><form id="entry-form">${entryFieldsHTML(card)}</form></article><details class="composition-preview"><summary>Preview ${esc(r.feature)}</summary><div id="composition-preview"></div></details><div class="entry-bottom"><a href="./#room=${card.room}" target="_blank" rel="noopener">See Room ${r.number} in the museum ↗</a>${next ? `<button class="button" id="next-entry">Next: ${esc(next.label)} →</button>` : '<button class="button" id="review-all">Review the presentation →</button>'}</div>`;
+    `<header class="room-intro"><span class="eyebrow">ROOM ${r.number} · EXHIBITION STUDIO</span><h1>${esc(r.title)}</h1><p>${esc(r.summary)}</p><div class="reading"><span>Reading</span>${esc(r.reading)}</div><details class="chronology-guide"><summary>Reading order &amp; connection</summary><p>${esc(r.chronology)}</p><p>${esc(r.bridge)}</p></details></header><article class="entry-card"><div class="entry-heading"><div><h2>${esc(card.label)}</h2><p>${esc(card.guide)}</p></div><span class="entry-progress" id="entry-progress"></span></div><form id="entry-form">${visibilityHTML(card)}${entryFieldsHTML(card)}</form></article><details class="composition-preview"><summary>Preview ${esc(r.feature)}</summary><div id="composition-preview"></div></details><div class="entry-bottom"><a href="./#room=${card.room}" target="_blank" rel="noopener">See Room ${r.number} in the museum ↗</a>${next ? `<button class="button" id="next-entry">Next: ${esc(next.label)} →</button>` : '<button class="button" id="review-all">Review the presentation →</button>'}</div>`;
   $("#entry-form").onsubmit = (e) => e.preventDefault();
   bindFields();
   if (next) $("#next-entry").onclick = () => select(next.id);
@@ -248,9 +284,11 @@ function renderEntry() {
     };
 }
 function bindFields() {
+  bindVisibility();
   $$("[data-field]").forEach((input) => {
     input.setAttribute("aria-describedby", `help-${input.dataset.field}`);
     input.onfocus = () => {
+      developer.focus(input.dataset.field);
       input.dataset.baseRevision = String(
         store.pending[input.dataset.field]?.baseRevision ??
           store.fields[input.dataset.field]?.revision ??
@@ -329,6 +367,19 @@ function renderChecklist(values) {
   );
 }
 function hydrateFields(values) {
+  for (const wrap of $$("[data-visibility]")) {
+    const id = wrap.dataset.visibility,
+      shown = isBoardVisible(id, values),
+      pending = store.pending[`${id}.visibility`];
+    wrap.classList.toggle("removed", !shown);
+    wrap.querySelector("[data-visibility-label]").textContent = shown
+      ? "Board in exhibition"
+      : "Board removed from exhibition";
+    const button = wrap.querySelector("[data-toggle-board]");
+    button.textContent = shown ? "Remove board" : "Restore board";
+    button.disabled = !!pending?.conflict;
+    if (pending?.conflict) wrap.querySelector("details").open = true;
+  }
   for (const archive of $$("[data-earlier-event]")) {
     archive.textContent = earlierEventWriting(
       archive.dataset.earlierEvent,
@@ -446,6 +497,7 @@ function render() {
         : selected;
   if (showOverview) {
     renderChecklist(values);
+    developer.select();
     renderKey = key;
     return;
   }
@@ -456,6 +508,7 @@ function render() {
     renderKey = key;
   }
   hydrateFields(values);
+  developer.update();
   if (!$("#composition-preview")) return;
   $("#composition-preview").innerHTML = compositionHTML(
     roomOfSelection(),

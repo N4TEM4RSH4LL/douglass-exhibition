@@ -878,3 +878,93 @@ body.ui-hidden #corner-navigation > * {
     font-size: 28px;
   }
 }
+
+#graphics-dialog {
+  color: #f7f1dd;
+  background: #1d332b;
+  border: 1px solid #a99262;
+  border-radius: 16px;
+  padding: 32px;
+  width: min(500px, calc(100vw - 32px));
+  max-height: 90dvh;
+}
+#graphics-dialog::backdrop {
+  background: #07140fc9;
+  backdrop-filter: blur(6px);
+}
+#graphics-dialog h2 {
+  font:
+    36px Georgia,
+    serif;
+  margin: 10px 0 16px;
+}
+#graphics-dialog p {
+  line-height: 1.6;
+  font-size: 14px;
+}
+#graphics-dialog label {
+  display: block;
+  margin: 24px 0 8px;
+}
+#graphics-dialog select {
+  width: 100%;
+  padding: 13px;
+  color: #23382c;
+  background: #faf4df;
+  font: inherit;
+  border-radius: 6px;
+}
+#graphics-dialog output {
+  display: block;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #d2c9ac;
+}
+.graphics-eyebrow {
+  letter-spacing: 0.15em;
+  font-size: 11px;
+  color: #d1bd88;
+}
+#close-graphics {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 4px 9px;
+  font-size: 28px;
+  cursor: pointer;
+}
+.graphics-done {
+  background: #e2cd97;
+  color: #263a2a;
+  border: 0;
+  border-radius: 6px;
+  padding: 11px 26px;
+  margin-top: 24px;
+  font: inherit;
+  cursor: pointer;
+}
+.board-preview-mode
+  > :not(#world):not(#loading):not(#error):not(#board-preview-message):not(
+    script
+  ) {
+  display: none !important;
+}
+#board-preview-message {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  background: #1b342ee8;
+  color: #fff4d8;
+  border: 1px solid #cfb67a;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  z-index: 90;
+}
+.board-preview-mode #world {
+  pointer-events: none;
+}

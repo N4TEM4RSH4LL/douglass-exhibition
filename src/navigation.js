@@ -4,11 +4,14 @@ export const farShore = (x) => -178 + Math.sin(x * 0.023) * 5;
 export const isLand = (x, z, margin = 0) =>
   z >= shoreline(x) + margin || z <= farShore(x) - margin;
 export function pointClear(x, z, colliders) {
-  return !colliders.some((c) => x > c.x1 && x < c.x2 && z > c.z1 && z < c.z2);
+  return !colliders.some(
+    (c) => c.enabled !== false && x > c.x1 && x < c.x2 && z > c.z1 && z < c.z2,
+  );
 }
 export function segmentClear(a, b, colliders) {
   // Intersect the entire segment with each open rectangle: sampling can miss a narrow corner.
   for (const c of colliders) {
+    if (c.enabled === false) continue;
     let enter = 0,
       exit = 1,
       miss = false;

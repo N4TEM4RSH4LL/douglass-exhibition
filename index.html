@@ -55,6 +55,9 @@
             <button id="explore-exhibition" class="opening-explore">
               Explore full museum
             </button>
+            <button id="opening-graphics" class="opening-skip">
+              Graphics settings
+            </button>
             <button id="skip-opening" class="opening-skip">
               Present without animation
             </button>
@@ -143,8 +146,8 @@
         <button
           id="quality"
           class="icon-button"
-          aria-label="Switch to performance mode"
-          title="Visual quality"
+          aria-label="Graphics settings"
+          title="Graphics settings"
           aria-pressed="false"
         ></button>
         <button
@@ -189,6 +192,7 @@
         <div>
           <button id="presentation-walk" aria-pressed="false">
             Walk around</button
+          ><button id="presentation-graphics">Graphics</button
           ><button id="presentation-fullscreen">Fullscreen</button
           ><button id="exit-presentation">Exit presentation</button>
         </div>
@@ -271,6 +275,28 @@
     <dialog id="room-reader">
       <button id="close-room-reader" aria-label="Close room entries">×</button>
       <div id="room-reader-content"></div>
+    </dialog>
+    <dialog id="graphics-dialog" aria-labelledby="graphics-title">
+      <button id="close-graphics" aria-label="Close graphics settings">
+        ×
+      </button>
+      <span class="graphics-eyebrow">THIS DEVICE</span>
+      <h2 id="graphics-title">Graphics settings</h2>
+      <p>
+        Choose how much detail your device renders. These settings stay on this
+        device.
+      </p>
+      <label for="graphics-preset">Quality preset</label>
+      <select id="graphics-preset">
+        <option value="auto">Automatic</option>
+        <option value="low">Low · older devices</option>
+        <option value="balanced">Balanced</option>
+        <option value="high">High</option>
+        <option value="maximum">Maximum · full detail</option>
+      </select>
+      <p id="graphics-description"></p>
+      <output id="graphics-detail"></output>
+      <button id="apply-graphics" class="graphics-done">Done</button>
     </dialog>
     <div id="camera-fade" aria-hidden="true"></div>
     <div id="error" hidden>
