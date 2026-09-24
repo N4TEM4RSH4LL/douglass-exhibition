@@ -571,6 +571,33 @@ $("#lock-editor").onclick = () => {
   $("#class-key").value = "";
   $("#access-dialog").close();
 };
+$("#export-word").onclick = async () => {
+  const button = $("#export-word"),
+    message = $("#export-status");
+  button.disabled = true;
+  message.hidden = false;
+  message.textContent = "Preparing your writing backup…";
+  try {
+    await store.refresh();
+    const { writingSnapshot, downloadWritingDocument } =
+      await import("./document-export.js");
+    const snapshot = writingSnapshot(store.values(), {
+      pending: store.pending,
+      fields: store.fields,
+      online: store.online,
+    });
+    if (!snapshot.fieldCount)
+      throw new Error(
+        "No class writing is loaded yet. Connect to the exhibition and try again.",
+      );
+    await downloadWritingDocument(snapshot);
+    message.textContent = `Word download started · ${snapshot.fieldCount} written fields${snapshot.draftCount ? `, including ${snapshot.draftCount} local drafts` : ""}.`;
+  } catch (error) {
+    message.textContent = "Export could not finish: " + error.message;
+  } finally {
+    button.disabled = false;
+  }
+};
 $("#download").onclick = () => {
   const blob = new Blob([JSON.stringify(store.export(), null, 2)], {
     type: "application/json",

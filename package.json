@@ -9,11 +9,13 @@
     "preview": "vite preview --host 0.0.0.0",
     "dev:api": "node --env-file=.env.local scripts/dev-api.mjs",
     "db:setup": "node --env-file=.env.local scripts/setup-db.mjs",
-    "test": "node tests/presentation.mjs && node tests/navigation.mjs",
-    "test:persistence": "node --env-file=.env.local tests/persistence.mjs"
+    "test": "node tests/presentation.mjs && node tests/document-export.mjs && node tests/navigation.mjs",
+    "test:persistence": "node --env-file=.env.local tests/persistence.mjs",
+    "export:writing": "node scripts/export-writing.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
+    "docx": "9.6.1",
     "three": "0.186.0"
   },
   "devDependencies": {

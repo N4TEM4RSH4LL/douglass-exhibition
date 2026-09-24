@@ -1105,3 +1105,10 @@ dialog label span {
     min-width: 0;
   }
 }
+
+#export-status {
+  color: #ece3c7;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
